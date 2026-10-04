@@ -76,6 +76,9 @@ dependencies = [
 dev = [
     { name = "pytest" },
 ]
+figures = [
+    { name = "matplotlib" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -98,6 +101,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [{ name = "pytest", specifier = ">=8" }]
+figures = [{ name = "matplotlib", specifier = ">=3.8" }]
 
 [[package]]
 name = "certifi"
