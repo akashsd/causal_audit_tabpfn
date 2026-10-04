@@ -109,10 +109,15 @@ def fig_small_n():
     d["err_sd"] = (d.ate - d.truth) / d.scene.map(sd)
     g = d.groupby(["learner", "n"]).err_sd.apply(lambda e: np.sqrt((e ** 2).mean())).unstack("learner")
     fig, ax = plt.subplots(figsize=(6, 3.4))
+    ends = sorted(((g[l].iloc[-1], l) for l in LEARNER if l in g), reverse=True)
+    label_y, prev = {}, None
+    for v, l in ends:  # push end labels apart when lines finish close together
+        y = v if prev is None else min(v, prev - 0.045)
+        label_y[l], prev = y, y
     for l, (lab, col) in LEARNER.items():
         if l in g:
             ax.plot(g.index, g[l], color=col, lw=2, marker="o", ms=7, mec=SURFACE, mew=2)
-            ax.text(g.index[-1] * 1.04, g[l].iloc[-1], lab, color=INK, va="center", fontsize=9)
+            ax.text(g.index[-1] * 1.06, label_y[l], lab, color=INK, va="center", fontsize=9)
     ax.set_xscale("log")
     ax.set_xticks(g.index, [str(i) for i in g.index])
     ax.minorticks_off()
@@ -124,24 +129,22 @@ def fig_small_n():
     fig.savefig(OUT / "fig_small_n.png", dpi=160, bbox_inches="tight")
 
 
-def fig_falsification():
+def fig_falsification(n: int = 2000):
     from .analyze import claim_kinds
 
     p = OUT / "e2_falsification.jsonl"
     if not p.exists():
         return
     d = _read("e2_falsification.jsonl")
+    d = d[d.n == n].copy()
     d["kind"] = claim_kinds(d)
     n_equiv = d[d.kind.str.contains("equivalent")].groupby(["scene", "claim"]).ngroups
     d = d[d.testable]
-    kinds = [("true claim", "true claims
-(false alarms ↓)"),
-             ("wrong: ignores hidden confounding (detectable)", "wrong: ignores hidden
-confounding (caught ↑)"),
-             ("wrong: reversed edge at treatment (detectable)", "wrong: reversed edge
-at treatment (caught ↑)")]
+    kinds = [("true claim", "true claims\n(false alarms ↓)"),
+             ("wrong: ignores hidden confounding (detectable)", "wrong: ignores hidden\nconfounding (caught ↑)"),
+             ("wrong: reversed edge at treatment (detectable)", "wrong: reversed edge\nat treatment (caught ↑)")]
     methods = [("tabpfn_crt", "TabPFN-3.5 CRT", BLUE), ("partial_corr", "linear partial correlation", ORANGE)]
-    fig, ax = plt.subplots(figsize=(8, 3.6))
+    fig, (ax, ax2) = plt.subplots(1, 2, figsize=(12.5, 3.8), gridspec_kw={"width_ratios": [3, 2], "wspace": 0.25})
     x = np.arange(len(kinds))
     w = 0.36
     for i, (m, lab, col) in enumerate(methods):
@@ -165,8 +168,24 @@ at treatment (caught ↑)")]
     ax.set_ylabel("claims rejected")
     ax.grid(axis="x", visible=False)
     ax.legend(frameon=False, loc="upper left", fontsize=9)
-    ax.set_title("Testing each claim's implied independencies (Holm, α = 0.05; scene-clustered 95% CIs)",
-                 loc="left", fontsize=11)
+    ax.set_title(f"A · Rejection rates at α = 0.05 (Holm; n = {n}; scene-clustered 95% CIs)", loc="left", fontsize=11)
+    # Panel B: detection at an equal false-alarm rate (threshold set so <= 5% of TRUE claims are rejected)
+    from .analyze import matched_power
+    mp = matched_power()
+    mp = mp[mp.n == n]
+    kinds2 = kinds[1:]
+    x2 = np.arange(len(kinds2))
+    for i, (m, lab, col) in enumerate(methods):
+        vals = [mp[(mp.method == m) & (mp.claim == k)]["detection at matched false-alarm rate"].mean() for k, _ in kinds2]
+        xs = x2 + (i - 0.5) * w
+        ax2.bar(xs, vals, width=w, color=col, edgecolor=SURFACE, linewidth=2)
+        for xi, v in zip(xs, vals):
+            ax2.text(xi, v + 0.04, f"{v:.0%}", ha="center", fontsize=9, color=INK)
+    ax2.set_xticks(x2, [k[1].replace(" (caught ↑)", "") for k in kinds2])
+    ax2.set_ylim(0, 1.18)
+    ax2.yaxis.set_major_formatter(PercentFormatter(1.0, decimals=0))
+    ax2.grid(axis="x", visible=False)
+    ax2.set_title("B · Wrong claims caught at an equal false-alarm rate (≤ 5%)", loc="left", fontsize=11)
     fig.text(0.01, -0.04, f"Not shown: {n_equiv} wrong claims are Markov-equivalent to the truth on the tested "
              "independencies — no test can detect them; the audit reports such assumptions as untestable.",
              fontsize=8, color=INK2)
