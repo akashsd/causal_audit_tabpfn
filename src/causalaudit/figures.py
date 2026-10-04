@@ -102,7 +102,8 @@ def fig_small_n():
     p = OUT / "e1_small_n.jsonl"
     if not p.exists():
         return
-    d = pd.concat([_read("e1_small_n.jsonl"), _read("e1_estimation.jsonl")])
+    d = pd.concat([_read("e1_small_n.jsonl"), _read("e1_estimation.jsonl")], ignore_index=True)
+    d = d.drop_duplicates(["scene", "rep", "arm", "learner", "n"], keep="last")
     d = d[(d.arm == "oracle") & d.learner.isin(LEARNER) & ~d.scene.isin(trap_scenes())]
     sd = {s: C.ground_truth(s)["outcome_stats"]["std"] for s in d.scene.unique()}
     d["err_sd"] = (d.ate - d.truth) / d.scene.map(sd)

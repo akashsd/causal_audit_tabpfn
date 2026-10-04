@@ -9,61 +9,61 @@
   "identifiable_by_adjustment": false,
   "adjustment_set": null,
   "forbidden": {
-   "death": "post-treatment variable (descendant of treatment)",
-   "smkintensity82_71": "mediator (on a causal path from treatment to outcome)"
+   "smkintensity82_71": "mediator (on a causal path from treatment to outcome)",
+   "death": "post-treatment variable (descendant of treatment)"
   }
  },
  "falsification": {
-  "method": "tabpfn_crt",
+  "method": "partial_corr",
   "rejected": true,
   "n_tests": 9,
   "tests": [
    {
     "test": "sex ⟂ price82 given {}",
-    "p": 0.4687,
+    "p": 0.7811,
     "p_holm": 1.0
    },
    {
     "test": "price82 ⟂ age given {sex, race}",
-    "p": 0.6804,
-    "p_holm": 1.0
+    "p": 0.1275,
+    "p_holm": 0.7653
    },
    {
     "test": "price82 ⟂ education given {sex, race}",
-    "p": 0.0,
-    "p_holm": 0.0,
+    "p": 0.0032,
+    "p_holm": 0.0221,
     "consequential": false
    },
    {
     "test": "price82 ⟂ smokeintensity given {sex, race, age, education, income}",
-    "p": 0.0,
-    "p_holm": 0.0,
-    "consequential": false
+    "p": 0.8712,
+    "p_holm": 1.0
    },
    {
     "test": "price82 ⟂ smokeyrs given {sex, race, age, education, income}",
-    "p": 0.2302,
+    "p": 0.498,
     "p_holm": 1.0
    },
    {
     "test": "price82 ⟂ exercise given {sex, race, age, education, income}",
-    "p": 0.0599,
-    "p_holm": 0.3593
+    "p": 0.0,
+    "p_holm": 0.0002,
+    "consequential": false
    },
    {
     "test": "price82 ⟂ active given {sex, race, age, education, income}",
-    "p": 0.985,
+    "p": 0.5342,
     "p_holm": 1.0
    },
    {
     "test": "price82 ⟂ wt71 given {sex, race, age, education, income}",
-    "p": 0.5466,
+    "p": 0.5123,
     "p_holm": 1.0
    },
    {
     "test": "price82 ⟂ alcoholfreq given {sex, race, age, education, income}",
-    "p": 0.0001,
-    "p_holm": 0.0007,
+    "p": 0.0,
+    "p_holm": 0.0,
     "consequential": false
    }
   ],

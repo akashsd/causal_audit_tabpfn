@@ -120,6 +120,28 @@ class Claim:
                 out.append((a, b, tuple(sorted(sep, key=order.get))))
         return out
 
+    def local_repairs(self, a: str, b: str) -> list["Claim"]:
+        """Minimal ways to make a contradicted independency a ⟂ b | S false: a direct edge either way,
+        or an unmeasured common cause of a and b. Repairs that would create a cycle are skipped."""
+        out = []
+        for src, dst in ((a, b), (b, a)):
+            c = Claim(self.treatment, self.outcome, self.observed, [*self.edges, Edge(src, dst, "low", "repair")],
+                      self.latent, background=self.background)
+            try:
+                c.graph
+            except ValueError:
+                continue
+            out.append(c)
+        lat = f"_repair_U_{a}_{b}"
+        out.append(Claim(self.treatment, self.outcome, self.observed,
+                         [*self.edges, Edge(lat, a, "low", "repair"), Edge(lat, b, "low", "repair")],
+                         [*self.latent, lat], background=self.background))
+        return out
+
+    def failure_is_consequential(self, a: str, b: str, adjust: set[str]) -> bool:
+        """Would any local repair of the contradicted independency a ⟂ b invalidate `adjust`?"""
+        return any(not r.is_valid_adjustment(set(adjust)) for r in self.local_repairs(a, b))
+
     def summary(self) -> dict:
         adj = self.adjustment_set()
         return {"identifiable_by_adjustment": adj is not None,

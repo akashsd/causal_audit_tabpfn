@@ -3,20 +3,20 @@
  "treatment": "qsmk",
  "outcome": "wt82_71",
  "n": 1566,
- "claim_author": "claude (blind)",
+ "claim_author": "claude (revision after falsification)",
  "learner": "tabpfn_fast",
  "identification": {
   "identifiable_by_adjustment": false,
   "adjustment_set": null,
   "forbidden": {
-   "death": "post-treatment variable (descendant of treatment)",
-   "smkintensity82_71": "mediator (on a causal path from treatment to outcome)"
+   "smkintensity82_71": "mediator (on a causal path from treatment to outcome)",
+   "death": "post-treatment variable (descendant of treatment)"
   }
  },
  "falsification": {
   "method": "tabpfn_crt",
   "rejected": true,
-  "n_tests": 9,
+  "n_tests": 6,
   "tests": [
    {
     "test": "sex ⟂ price82 given {}",
@@ -29,42 +29,25 @@
     "p_holm": 1.0
    },
    {
-    "test": "price82 ⟂ education given {sex, race}",
-    "p": 0.0,
-    "p_holm": 0.0,
-    "consequential": false
-   },
-   {
-    "test": "price82 ⟂ smokeintensity given {sex, race, age, education, income}",
-    "p": 0.0,
-    "p_holm": 0.0,
-    "consequential": false
-   },
-   {
-    "test": "price82 ⟂ smokeyrs given {sex, race, age, education, income}",
-    "p": 0.2302,
+    "test": "price82 ⟂ smokeyrs given {sex, race, age, education, income, smokeintensity}",
+    "p": 0.8721,
     "p_holm": 1.0
    },
    {
-    "test": "price82 ⟂ exercise given {sex, race, age, education, income}",
-    "p": 0.0599,
-    "p_holm": 0.3593
-   },
-   {
-    "test": "price82 ⟂ active given {sex, race, age, education, income}",
-    "p": 0.985,
-    "p_holm": 1.0
-   },
-   {
-    "test": "price82 ⟂ wt71 given {sex, race, age, education, income}",
-    "p": 0.5466,
-    "p_holm": 1.0
-   },
-   {
-    "test": "price82 ⟂ alcoholfreq given {sex, race, age, education, income}",
-    "p": 0.0001,
-    "p_holm": 0.0007,
+    "test": "price82 ⟂ exercise given {sex, race, age, education, income, smokeintensity}",
+    "p": 0.0046,
+    "p_holm": 0.0276,
     "consequential": false
+   },
+   {
+    "test": "price82 ⟂ active given {sex, race, age, education, income, smokeintensity}",
+    "p": 0.996,
+    "p_holm": 1.0
+   },
+   {
+    "test": "price82 ⟂ wt71 given {sex, race, age, education, income, smokeintensity}",
+    "p": 0.5384,
+    "p_holm": 1.0
    }
   ],
   "consequential_failures": 0
@@ -175,5 +158,5 @@
    "n_clipped": 1227
   }
  },
- "verdict": "PARTLY REJECTED, INCONSEQUENTIAL — 3 implied independencies contradicted, but no local repair of them changes which variables must be adjusted for, so the estimate stands. NOT IDENTIFIED WITHOUT AN EXTRA ASSUMPTION — the claim names unmeasured confounding (incident_illness, state_of_residence). If it were absent, ATE = +3.496 (95% CI +2.531 to +4.461); to explain this away it would need a risk-ratio association of ≥ 2.36 with both treatment and outcome (≥ 2.01 to move the CI to include zero)."
+ "verdict": "PARTLY REJECTED, INCONSEQUENTIAL — 1 implied independency contradicted, but no local repair of them changes which variables must be adjusted for, so the estimate stands. NOT IDENTIFIED WITHOUT AN EXTRA ASSUMPTION — the claim names unmeasured confounding (incident_illness, state_of_residence). If it were absent, ATE = +3.496 (95% CI +2.531 to +4.461); to explain this away it would need a risk-ratio association of ≥ 2.36 with both treatment and outcome (≥ 2.01 to move the CI to include zero)."
 }

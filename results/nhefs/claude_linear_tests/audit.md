@@ -8,22 +8,22 @@
 ## 1. Identification (from the stated causal graph)
 
 - **not identifiable by adjustment** (the claim includes unmeasured confounding)
-- do **not** adjust for `death`: post-treatment variable (descendant of treatment)
 - do **not** adjust for `smkintensity82_71`: mediator (on a causal path from treatment to outcome)
+- do **not** adjust for `death`: post-treatment variable (descendant of treatment)
 
-## 2. Falsification (tabpfn_crt, 9 implied independencies, Holm-corrected)
+## 2. Falsification (partial_corr, 9 implied independencies, Holm-corrected)
 
 | implied by the claim | p | p (Holm) | |
 |---|---|---|---|
-| sex ⟂ price82 given {} | 0.469 | 1.000 | ✓ consistent |
-| price82 ⟂ age given {sex, race} | 0.680 | 1.000 | ✓ consistent |
-| price82 ⟂ education given {sex, race} | 0.000 | 0.000 | ❌ contradicted — does not affect the adjustment set |
-| price82 ⟂ smokeintensity given {sex, race, age, education, income} | 0.000 | 0.000 | ❌ contradicted — does not affect the adjustment set |
-| price82 ⟂ smokeyrs given {sex, race, age, education, income} | 0.230 | 1.000 | ✓ consistent |
-| price82 ⟂ exercise given {sex, race, age, education, income} | 0.060 | 0.359 | ✓ consistent |
-| price82 ⟂ active given {sex, race, age, education, income} | 0.985 | 1.000 | ✓ consistent |
-| price82 ⟂ wt71 given {sex, race, age, education, income} | 0.547 | 1.000 | ✓ consistent |
-| price82 ⟂ alcoholfreq given {sex, race, age, education, income} | 0.000 | 0.001 | ❌ contradicted — does not affect the adjustment set |
+| sex ⟂ price82 given {} | 0.781 | 1.000 | ✓ consistent |
+| price82 ⟂ age given {sex, race} | 0.128 | 0.765 | ✓ consistent |
+| price82 ⟂ education given {sex, race} | 0.003 | 0.022 | ❌ contradicted — does not affect the adjustment set |
+| price82 ⟂ smokeintensity given {sex, race, age, education, income} | 0.871 | 1.000 | ✓ consistent |
+| price82 ⟂ smokeyrs given {sex, race, age, education, income} | 0.498 | 1.000 | ✓ consistent |
+| price82 ⟂ exercise given {sex, race, age, education, income} | 0.000 | 0.000 | ❌ contradicted — does not affect the adjustment set |
+| price82 ⟂ active given {sex, race, age, education, income} | 0.534 | 1.000 | ✓ consistent |
+| price82 ⟂ wt71 given {sex, race, age, education, income} | 0.512 | 1.000 | ✓ consistent |
+| price82 ⟂ alcoholfreq given {sex, race, age, education, income} | 0.000 | 0.000 | ❌ contradicted — does not affect the adjustment set |
 
 ## 3. Estimate (cross-fitted AIPW, TabPFN-3.5 nuisance models) — *conditional on no unmeasured confounding*
 

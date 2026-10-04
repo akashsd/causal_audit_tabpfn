@@ -120,6 +120,34 @@ def e2_table() -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def matched_power(target_fa: float = 0.05) -> pd.DataFrame:
+    """Detection rate at an EQUAL false-alarm rate: per method (and n), pick the threshold on the
+    claim-level score (smallest Holm-adjusted p) so that at most `target_fa` of TRUE claims are
+    rejected, then report how many detectable wrong claims fall below it."""
+    d = _read("e2_falsification.jsonl")
+    if d.empty:
+        return d
+    d["claim_kind"] = claim_kinds(d)
+    d = d[d.testable].copy()
+    d["score"] = d.tests.map(lambda ts: min(t["p_holm"] for t in ts))
+    rows = []
+    for (m, n), g in d.groupby(["method", "n"]):
+        true = np.sort(g[g.claim_kind == "true claim"].score.to_numpy())
+        if not len(true):
+            continue
+        k = int(np.floor(target_fa * len(true)))      # number of true claims we allow to be rejected
+        thr = true[k] if k < len(true) else 1.0        # reject iff score < thr
+        for kind in sorted(g.claim_kind.unique()):
+            if "detectable" not in kind:
+                continue
+            w = g[g.claim_kind == kind]
+            rows.append({"method": m, "n": n, "claim": kind, "threshold": thr,
+                         "false alarms on true claims": float((true < thr).mean()),
+                         "detection at matched false-alarm rate": float((w.score < thr).mean()),
+                         "runs": len(w)})
+    return pd.DataFrame(rows)
+
+
 def main():
     parts = ["# CausalDS results", ""]
     e1 = e1_table()

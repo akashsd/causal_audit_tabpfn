@@ -62,3 +62,13 @@ def test_markov_equivalent_wrong_claim_is_undetectable():
     iv_truth = claim([("Z", "T"), ("T", "Y"), ("U", "T"), ("U", "Y")], ["Z", "T", "Y"], latent=["U"])
     no_confounding = claim([("Z", "T"), ("T", "Y")], ["Z", "T", "Y"])
     assert detectable(no_confounding, iv_truth)
+
+
+def test_failure_consequence():
+    # Z1 -> T, Z2 -> Y, T -> Y; claim says Z1 ⟂ Z2. Adjustment set {} is valid.
+    c = claim([("Z1", "T"), ("Z2", "Y"), ("T", "Y")], ["Z1", "Z2", "T", "Y"])
+    assert c.adjustment_set() == set()
+    # if Z1 and Z2 are in fact dependent, an open backdoor T <- Z1 - Z2 -> Y appears: consequential for {}
+    assert c.failure_is_consequential("Z1", "Z2", set())
+    # ...but not if we already adjust for Z2
+    assert not c.failure_is_consequential("Z1", "Z2", {"Z2"})

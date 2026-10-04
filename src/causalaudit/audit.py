@@ -58,12 +58,20 @@ def run(claim: Claim, df: pd.DataFrame, learner: str = "tabpfn_fast", ci_method:
     # 3-4. overlap + estimate. If only the hypothesised latent confounders block identification,
     # also report the estimate *conditional on* their absence, with an E-value saying how strong
     # they would have to be to explain the effect away.
-    est_adj, conditional = adj, False
+    est_adj, conditional, working = adj, False, claim
     if adj is None and claim.latent:
-        no_latent = Claim(T, Y, claim.observed,
-                          [e for e in claim.edges if e.src not in claim.latent and e.dst not in claim.latent],
-                          background=claim.background, author=claim.author)
-        est_adj, conditional = no_latent.adjustment_set(), True
+        working = Claim(T, Y, claim.observed,
+                        [e for e in claim.edges if e.src not in claim.latent and e.dst not in claim.latent],
+                        background=claim.background, author=claim.author)
+        est_adj, conditional = working.adjustment_set(), True
+    # Which contradicted implications actually matter for THIS effect? A failure is consequential if
+    # some local repair (edge either way, or a hidden common cause) would invalidate the adjustment set.
+    contradicted = [t for t in fz["tests"] if t.p_adjusted < alpha]
+    for t, row in zip(fz["tests"], out["falsification"]["tests"]):
+        if t.p_adjusted < alpha:
+            row["consequential"] = (est_adj is None) or working.failure_is_consequential(t.a, t.b, est_adj)
+    out["falsification"]["consequential_failures"] = sum(
+        bool(r.get("consequential")) for r in out["falsification"]["tests"])
     out["conditional_on_no_latent_confounding"] = conditional and est_adj is not None
     if est_adj is not None:
         adj = est_adj
@@ -85,7 +93,7 @@ def run(claim: Claim, df: pd.DataFrame, learner: str = "tabpfn_fast", ci_method:
     # 6. verdict
     if adj is None:
         verdict = "NOT IDENTIFIABLE by adjustment under the stated assumptions — no effect reported."
-    elif fz["rejected"]:
+    elif fz["rejected"] and out["falsification"]["consequential_failures"]:
         verdict = "ASSUMPTIONS REJECTED by the data — revise the causal claim before trusting any estimate."
     elif out["conditional_on_no_latent_confounding"]:
         ev = out["sensitivity"]["e_value"]
@@ -100,6 +108,10 @@ def run(claim: Claim, df: pd.DataFrame, learner: str = "tabpfn_fast", ci_method:
         verdict = "INCONCLUSIVE — assumptions survive testing, but the confidence interval includes zero."
     else:
         verdict = "SUPPORTED — assumptions survive testing and the effect is distinguishable from zero."
+    if contradicted and not out["falsification"]["consequential_failures"] and est_adj is not None:
+        verdict = (f"PARTLY REJECTED, INCONSEQUENTIAL — {len(contradicted)} implied independenc"
+                   f"{'y' if len(contradicted) == 1 else 'ies'} contradicted, but no local repair of them changes "
+                   f"which variables must be adjusted for, so the estimate stands. " + verdict)
     out["verdict"] = verdict
     return out
 
@@ -117,8 +129,12 @@ def to_markdown(r: dict) -> str:
     L += ["", f"## 2. Falsification ({fz['method']}, {fz['n_tests']} implied independencies, Holm-corrected)", ""]
     if fz["tests"]:
         L += ["| implied by the claim | p | p (Holm) | |", "|---|---|---|---|"]
-        L += [f"| {t['test']} | {t['p']:.3f} | {t['p_holm']:.3f} | {'❌ contradicted' if t['p_holm'] < 0.05 else '✓ consistent'} |"
-              for t in fz["tests"]]
+        def status(t):
+            if t["p_holm"] >= 0.05:
+                return "✓ consistent"
+            return "❌ contradicted — " + ("**changes the adjustment set**" if t.get("consequential")
+                                          else "does not affect the adjustment set")
+        L += [f"| {t['test']} | {t['p']:.3f} | {t['p_holm']:.3f} | {status(t)} |" for t in fz["tests"]]
     else:
         L.append("_The claim implies no testable independencies among observed variables (untestable assumptions — see sensitivity)._")
     if "estimate" in r:

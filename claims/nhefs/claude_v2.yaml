@@ -1,0 +1,129 @@
+question: What is the average causal effect of quitting smoking on weight change?
+author: claude (revision after falsification)
+treatment: qsmk
+outcome: wt82_71
+observed:
+  - qsmk
+  - wt82_71
+  - sex
+  - race
+  - age
+  - education
+  - income
+  - smokeintensity
+  - smokeyrs
+  - exercise
+  - active
+  - wt71
+  - alcoholfreq
+  - smkintensity82_71
+  - price82
+  - death
+latent:
+  - incident_illness          # health deterioration / new diagnoses during 1971-82 not captured by baseline covariates ("sick quitter")
+  - state_of_residence        # geography: drives tobacco prices, correlates with race and income
+background:
+  - sex
+  - race
+  - age
+  - education
+  - income
+  - smokeintensity
+  - smokeyrs
+  - exercise
+  - active
+  - wt71
+  - alcoholfreq
+edges:
+  # ---- baseline confounders -> treatment ----
+  - {src: sex, dst: qsmk, confidence: medium, why: "Quit rates differ by sex (men historically quit more often)."}
+  - {src: race, dst: qsmk, confidence: medium, why: "Cessation rates differ by race/ethnicity in US cohorts."}
+  - {src: age, dst: qsmk, confidence: high, why: "Older smokers are more likely to quit (health concerns)."}
+  - {src: education, dst: qsmk, confidence: high, why: "Higher education strongly predicts successful cessation."}
+  - {src: income, dst: qsmk, confidence: medium, why: "Socioeconomic status predicts cessation and access to support."}
+  - {src: smokeintensity, dst: qsmk, confidence: high, why: "Heavier (more dependent) smokers are less likely to quit."}
+  - {src: smokeyrs, dst: qsmk, confidence: medium, why: "Longer smoking history reflects entrenched dependence and health concern."}
+  - {src: exercise, dst: qsmk, confidence: medium, why: "Health-conscious people who exercise are more likely to quit."}
+  - {src: active, dst: qsmk, confidence: medium, why: "Daily activity/health status influences motivation and ability to quit."}
+  - {src: wt71, dst: qsmk, confidence: medium, why: "Weight concerns (fear of gain) affect willingness to quit."}
+  - {src: alcoholfreq, dst: qsmk, confidence: medium, why: "Frequent drinking co-occurs with smoking and hinders cessation."}
+  # ---- baseline confounders -> outcome ----
+  - {src: sex, dst: wt82_71, confidence: high, why: "Weight trajectories over a decade differ by sex."}
+  - {src: race, dst: wt82_71, confidence: medium, why: "Adult weight-gain trajectories differ by race."}
+  - {src: age, dst: wt82_71, confidence: high, why: "Younger adults gain more weight over time; older adults gain less or lose."}
+  - {src: education, dst: wt82_71, confidence: medium, why: "SES/education shapes diet and weight gain."}
+  - {src: income, dst: wt82_71, confidence: low, why: "Income affects diet and weight trajectory."}
+  - {src: smokeintensity, dst: wt82_71, confidence: medium, why: "Heavier smokers have more nicotine-suppressed weight and different trajectories."}
+  - {src: smokeyrs, dst: wt82_71, confidence: low, why: "Long-term smoking affects metabolism and frailty-related weight loss."}
+  - {src: exercise, dst: wt82_71, confidence: high, why: "Recreational exercise affects energy balance and weight change."}
+  - {src: active, dst: wt82_71, confidence: high, why: "Daily activity affects energy balance and weight change."}
+  - {src: wt71, dst: wt82_71, confidence: high, why: "Baseline weight drives subsequent change (regression to the mean, ceiling)."}
+  - {src: alcoholfreq, dst: wt82_71, confidence: medium, why: "Alcohol contributes calories and affects weight."}
+  # ---- treatment -> outcome ----
+  - {src: qsmk, dst: wt82_71, confidence: high, why: "Nicotine cessation raises appetite and lowers metabolic rate, causing weight gain."}
+  # ---- post-treatment: change in smoking intensity (mediator) ----
+  - {src: qsmk, dst: smkintensity82_71, confidence: high, why: "Quitters drop to zero cigarettes, mechanically defining the change."}
+  - {src: smokeintensity, dst: smkintensity82_71, confidence: high, why: "Change is 1982 minus baseline intensity, so baseline enters mechanically."}
+  - {src: smokeyrs, dst: smkintensity82_71, confidence: low, why: "Long-term smokers' consumption trajectories differ."}
+  - {src: age, dst: smkintensity82_71, confidence: low, why: "Consumption among continuing smokers changes with age."}
+  - {src: sex, dst: smkintensity82_71, confidence: low, why: "Intensity trajectories differ by sex."}
+  - {src: education, dst: smkintensity82_71, confidence: low, why: "Educated continuing smokers tend to cut down."}
+  - {src: income, dst: smkintensity82_71, confidence: low, why: "Income moderates affordability of cigarettes."}
+  - {src: alcoholfreq, dst: smkintensity82_71, confidence: low, why: "Drinking sustains higher smoking intensity."}
+  - {src: price82, dst: smkintensity82_71, confidence: medium, why: "Higher cigarette prices reduce consumption among continuing smokers."}
+  - {src: incident_illness, dst: smkintensity82_71, confidence: medium, why: "Illness leads continuing smokers to cut down."}
+  - {src: smkintensity82_71, dst: wt82_71, confidence: medium, why: "Reduced nicotine intake (even without quitting) leads to weight gain."}
+  # ---- tobacco price (instrument-like) ----
+  - {src: state_of_residence, dst: price82, confidence: high, why: "Price is defined by state of residence (state taxes)."}
+  - {src: state_of_residence, dst: race, confidence: low, why: "Racial composition varies by state/region (Southern states have cheap tobacco)."}
+  - {src: state_of_residence, dst: income, confidence: low, why: "Income levels vary by state/region."}
+  # ---- v2 additions (after falsification): regional effects on other baseline covariates ----
+  - {src: state_of_residence, dst: education, confidence: medium, why: "Educational attainment of 1970s adults varies strongly by state/region (South vs Northeast/West)."}
+  - {src: state_of_residence, dst: smokeintensity, confidence: medium, why: "Cheap tobacco and pro-tobacco norms in tobacco states raise cigarettes smoked per day."}
+  - {src: state_of_residence, dst: alcoholfreq, confidence: medium, why: "Drinking norms and alcohol laws (dry counties, religious composition) vary by state/region."}
+  - {src: price82, dst: qsmk, confidence: low, why: "Higher tobacco prices encourage quitting (1982 price proxies the period's state price level)."}
+  # ---- unmeasured illness (sick-quitter confounding) ----
+  - {src: incident_illness, dst: qsmk, confidence: medium, why: "New illness/diagnosis prompts smokers to quit (sick-quitter effect)."}
+  - {src: incident_illness, dst: wt82_71, confidence: medium, why: "Illness (cancer, COPD, etc.) causes weight loss."}
+  - {src: incident_illness, dst: death, confidence: high, why: "Serious illness increases mortality."}
+  # ---- death (post-outcome) ----
+  - {src: qsmk, dst: death, confidence: high, why: "Quitting lowers mortality."}
+  - {src: smkintensity82_71, dst: death, confidence: medium, why: "Reducing consumption among continuing smokers lowers mortality risk."}
+  - {src: wt82_71, dst: death, confidence: low, why: "Large weight change (esp. loss) is associated with mortality."}
+  - {src: age, dst: death, confidence: high, why: "Mortality rises steeply with age."}
+  - {src: sex, dst: death, confidence: high, why: "Men have higher mortality."}
+  - {src: race, dst: death, confidence: medium, why: "Mortality differs by race in the US."}
+  - {src: education, dst: death, confidence: medium, why: "Education is a strong social determinant of mortality."}
+  - {src: income, dst: death, confidence: medium, why: "Income is a strong social determinant of mortality."}
+  - {src: smokeintensity, dst: death, confidence: high, why: "Dose of smoking increases mortality."}
+  - {src: smokeyrs, dst: death, confidence: high, why: "Pack-years of exposure increase mortality."}
+  - {src: exercise, dst: death, confidence: medium, why: "Physical activity reduces mortality."}
+  - {src: active, dst: death, confidence: high, why: "Inactivity (incl. disability) predicts mortality."}
+  - {src: wt71, dst: death, confidence: medium, why: "Baseline weight/obesity affects mortality."}
+  - {src: alcoholfreq, dst: death, confidence: low, why: "Heavy drinking increases mortality."}
+notes: >
+  REVISION v2 (after falsification of v1). Change vs v1: three edges ADDED, nothing removed, no new latents:
+  state_of_residence -> education, state_of_residence -> smokeintensity, state_of_residence -> alcoholfreq.
+  Motivation: the v1 audit contradicted exactly three implied independencies, all of the form price82 _||_ <baseline>:
+  price82 _||_ education | {sex, race} (p_holm=0.000), price82 _||_ smokeintensity | {sex, race, age, education, income}
+  (p_holm=0.000), price82 _||_ alcoholfreq | {sex, race, age, education, income} (p_holm=0.001). In v1 price82 was linked
+  to the baseline covariates only through state_of_residence -> {race, income}, so these dependences mean geography
+  reaches education, smoking intensity and drinking by routes other than race/income. Domain grounds: regional
+  differences in schooling, tobacco-state smoking intensity (cheap cigarettes -> more per day; 1982 state price proxies
+  the baseline state price level), and regional drinking norms/laws. The six consistent tests (sex, age, smokeyrs,
+  exercise, active, wt71 vs price82) are kept as claims (no state edge to them); exercise (raw p=0.06) is the weakest
+  and the first candidate if a further revision is needed. No edge state_of_residence -> wt82_71 or -> qsmk is added:
+  the data did not contradict exclusion, and v1's regional-diet caveat remains untested.
+  Expected effect on the adjustment set: NONE substantively. state_of_residence only gains children that are already
+  baseline adjustment covariates; every new back-door path qsmk <- price82 <- state -> {education, smokeintensity,
+  alcoholfreq} -> wt82_71 is blocked by adjusting them. The claim remains non-identifiable by adjustment because of
+  incident_illness (unchanged from v1).
+  --- v1 notes (retained) ---
+  Adjustment set intent: the 11 baseline covariates (Hernan & Robins' set plus alcoholfreq). Do NOT adjust for
+  smkintensity82_71 (mediator), death (post-outcome), or price82 (instrument-like; adjusting only amplifies bias).
+  Key judgment call is incident_illness (sick-quitter effect): smokers who develop disease between 1971 and 1982 are
+  more likely to quit and to lose weight, which baseline active/exercise/wt71 capture only partly. Under that latent
+  the effect is not identified by covariate adjustment; expected bias makes the adjusted estimate an UNDERestimate of
+  quitting-induced gain. If one assumes the baseline health proxies suffice (as Hernan & Robins do), drop
+  incident_illness and the adjustment set is the 11 baseline covariates. Analysis is restricted to people with a
+  measured 1982 weight; that selection could depend on qsmk and illness, which this DAG does not represent.

@@ -1,0 +1,4 @@
+# claude.yaml written by the blind subagent at 2026-10-04T03:27:17Z (file mtime) and never modified; manifest added 2026-10-04T04:44:17Z. Prompt: prompts/elicit_claim_realdata.md sha256 9bd4bdf45797965e8e7f355e3119ce617c97cff4c1a5871b12dc185ea8edd555
+404818b4dfcdf847a909e5883505b595f55c98926e87cbc9d8232d5157d3c869 *claims/nhefs/claude.yaml
+# claude_v2.yaml: revision written after v1 was rejected (agent saw only the v1 audit report); frozen 2026-10-04T04:49:31Z before its audit
+db6c18ea7d48e2fd321daa01d46334d570c59d06588182dea817b42f606446a6 *claims/nhefs/claude_v2.yaml
