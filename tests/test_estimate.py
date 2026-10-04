@@ -21,10 +21,10 @@ def test_aipw_recovers_effect_where_naive_fails():
     assert est["lo"] <= 2.0 <= est["hi"]
 
 
-def test_holm_is_monotone_and_bounded():
-    adj = holm([0.01, 0.04, 0.03])
-    assert adj == sorted(adj, key=lambda x: x) or max(adj) <= 1
-    assert abs(adj[0] - 0.03) < 1e-12 and all(a <= 1 for a in adj)
+def test_holm_exact_values():
+    # sorted p: 0.01 (x3) = 0.03, 0.03 (x2) = 0.06, 0.04 (x1) = 0.04 -> monotone 0.06
+    assert np.allclose(holm([0.01, 0.04, 0.03]), [0.03, 0.06, 0.06])
+    assert holm([0.5, float("nan")]) == [1.0, 1.0]
 
 
 def test_partial_corr_detects_linear_dependence():

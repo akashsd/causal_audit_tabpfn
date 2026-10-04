@@ -62,19 +62,22 @@ def adjustment_arms(scene: str) -> dict[str, list[str] | None]:
     return arms
 
 
-def run_e1(scenes: list[str], n: int, reps: int, learners: list[str], log=print):
-    path = OUT / "e1_estimation.jsonl"
-    done = _done(path, ("scene", "rep", "arm", "learner"))
+def run_e1(scenes: list[str], n: int, reps: int, learners: list[str], log=print,
+           arms_filter: list[str] | None = None, out: str = "e1_estimation.jsonl"):
+    path = OUT / out
+    done = _done(path, ("scene", "rep", "arm", "learner", "n"))
     for scene in scenes:
         oracle, truth = C.oracle_claim(scene), C.true_ate(scene)
         T, Y = oracle.treatment, oracle.outcome
         arms = adjustment_arms(scene)
+        if arms_filter:
+            arms = {k: v for k, v in arms.items() if k in arms_filter or k == "all_features"}
         for rep, df in enumerate(C.replicates(C.load_data(scene), n, reps)):
             cache: dict = {}
             jobs = [("difference", "-"), ("s_learner_all", "tabpfn_fast")]
-            jobs += [(arm, l) for arm in arms for l in learners]
+            jobs += [(arm, l) for arm in arms for l in learners if not arms_filter or arm in arms_filter]
             for arm, learner in jobs:
-                if (scene, rep, arm, learner) in done:
+                if (scene, rep, arm, learner, n) in done:
                     continue
                 t0 = time.perf_counter()
                 if arm == "difference":
@@ -126,9 +129,17 @@ def wrong_claims(scene: str) -> list[Claim]:
     return out
 
 
+def detectable(claim: Claim, oracle: Claim, max_tests: int = 8) -> bool:
+    """Can data falsify this claim at all? True if at least one independency the claim implies
+    (among the tests actually run) is FALSE in the true graph. Claims that are Markov-equivalent to
+    the truth on the tested set are undetectable by any CI test, however much data."""
+    g = oracle.graph
+    return any(not nx.is_d_separator(g, {a}, {b}, set(S)) for a, b, S in claim.implied_independencies()[:max_tests])
+
+
 def run_e2(scenes: list[str], n: int, reps: int, methods: list[str], log=print):
     path = OUT / "e2_falsification.jsonl"
-    done = _done(path, ("scene", "rep", "claim", "method"))
+    done = _done(path, ("scene", "rep", "claim", "method", "n"))
     for scene in scenes:
         claims = [C.oracle_claim(scene)] + wrong_claims(scene)
         cc = claude_claim(scene)
@@ -139,7 +150,7 @@ def run_e2(scenes: list[str], n: int, reps: int, methods: list[str], log=print):
             cache: dict = {}  # claims with identical testable implications share one test run
             for claim in claims:
                 for method in methods:
-                    if (scene, rep, claim.author, method) in done:
+                    if (scene, rep, claim.author, method, n) in done:
                         continue
                     sig = (tuple(claim.implied_independencies()[:MAX_TESTS]), method)
                     if sig not in cache:
@@ -162,11 +173,18 @@ def main(argv=None):
     p.add_argument("--reps", type=int, default=10)
     p.add_argument("--learners", nargs="+", default=["tabpfn_fast", "lgbm", "linear"])
     p.add_argument("--methods", nargs="+", default=["tabpfn_crt", "partial_corr"])
+    p.add_argument("--arms", nargs="*", help="E1: restrict adjustment arms (e.g. oracle)")
+    p.add_argument("--no-trap-only", action="store_true", help="E1: only scenes where all-features is valid")
+    p.add_argument("--out", default=None, help="output jsonl name under results/causal/")
     a = p.parse_args(argv)
     b = C.benchmark_scenes()
     log = lambda m: print(m, flush=True)
     if a.experiment == "e1":
-        run_e1(a.scenes or b["identifiable"], a.n, a.reps, a.learners, log)
+        scenes = a.scenes or b["identifiable"]
+        if a.no_trap_only:
+            from .analyze import trap_scenes
+            scenes = [s for s in scenes if s not in trap_scenes()]
+        run_e1(scenes, a.n, a.reps, a.learners, log, a.arms, a.out or "e1_estimation.jsonl")
     else:
         run_e2(a.scenes or b["identifiable"] + b["hidden_confounding"], a.n, a.reps, a.methods, log)
 

@@ -27,6 +27,7 @@ causalaudit = "causalaudit.cli:main"
 
 [dependency-groups]
 dev = ["pytest>=8"]
+figures = ["matplotlib>=3.8"]
 
 [build-system]
 requires = ["hatchling"]

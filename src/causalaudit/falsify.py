@@ -98,6 +98,7 @@ def partial_corr_test(df: pd.DataFrame, a: str, b: str, given: tuple[str, ...]) 
 
 
 def holm(ps: list[float]) -> list[float]:
+    ps = [1.0 if not np.isfinite(p) else p for p in ps]  # an untestable (NaN) test never rejects
     m, order = len(ps), np.argsort(ps)
     adj, running = np.empty(m), 0.0
     for rank, i in enumerate(order):

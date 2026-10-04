@@ -51,3 +51,14 @@ def test_roundtrip(tmp_path):
     c = claim([("Z", "T"), ("Z", "Y"), ("T", "Y")], ["Z", "T", "Y"])
     c.dump(tmp_path / "c.yaml")
     assert Claim.load(tmp_path / "c.yaml").adjustment_set() == {"Z"}
+
+
+def test_markov_equivalent_wrong_claim_is_undetectable():
+    from causalaudit.bench import detectable
+    truth = claim([("Z", "T"), ("Z", "Y"), ("T", "Y")], ["Z", "T", "Y"])
+    flipped = claim([("T", "Z"), ("Z", "Y"), ("T", "Y")], ["Z", "T", "Y"])  # complete triangle: same (no) implications
+    assert flipped.adjustment_set() != truth.adjustment_set()
+    assert not detectable(flipped, truth)
+    iv_truth = claim([("Z", "T"), ("T", "Y"), ("U", "T"), ("U", "Y")], ["Z", "T", "Y"], latent=["U"])
+    no_confounding = claim([("Z", "T"), ("T", "Y")], ["Z", "T", "Y"])
+    assert detectable(no_confounding, iv_truth)

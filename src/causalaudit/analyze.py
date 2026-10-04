@@ -22,6 +22,21 @@ def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
     return (c - h, c + h)
 
 
+def cluster_bootstrap(values: pd.Series, clusters: pd.Series, B: int = 2000, seed: int = 0) -> tuple[float, float]:
+    """95% CI for a mean when observations are clustered (replicates within a scene are correlated):
+    resample whole scenes with replacement."""
+    df = pd.DataFrame({"v": values.astype(float).to_numpy(), "c": clusters.to_numpy()}).dropna()
+    if df.empty:
+        return (np.nan, np.nan)
+    groups = [g.v.to_numpy() for _, g in df.groupby("c")]
+    r = np.random.default_rng(seed)
+    means = []
+    for _ in range(B):
+        pick = r.integers(0, len(groups), len(groups))
+        means.append(np.concatenate([groups[i] for i in pick]).mean())
+    return tuple(np.percentile(means, [2.5, 97.5]))
+
+
 def _read(name: str) -> pd.DataFrame:
     p = OUT / name
     return pd.DataFrame([json.loads(l) for l in p.read_text(encoding="utf-8").splitlines() if l]) if p.exists() else pd.DataFrame()
@@ -48,40 +63,60 @@ def e1_table() -> pd.DataFrame:
     d["err_sd"] = (d.ate - d.truth) / d.sd
     d["width_sd"] = (d.hi - d.lo) / d.sd
     d["scenario"] = np.where(d.scene.isin(traps), "trap", "no trap")
+    # the audit's overlap check: more than 2% of propensities clipped -> verdict "FRAGILE"
+    d["flagged"] = d.n_clipped.fillna(0) > 0.02 * d.n
     rows = []
     for (scen, arm, learner), g in d.groupby(["scenario", "arm", "learner"]):
         est = g[g.estimator != "abstain"]
         cov = est.covered.dropna()
         k, n = int(cov.sum()), len(cov)
-        lo, hi = wilson(k, n)
+        lo, hi = cluster_bootstrap(est.covered.dropna().astype(float), est.loc[est.covered.notna(), "scene"])
+        ok = est[~est.flagged].covered.dropna()
         rows.append({"scenario": scen, "arm": arm, "learner": learner, "n_estimates": len(est),
                      "abstained": int((g.estimator == "abstain").sum()),
                      "mean |error| (SD)": est.err_sd.abs().mean(), "RMSE (SD)": np.sqrt((est.err_sd ** 2).mean()),
-                     "coverage": k / n if n else np.nan, "coverage 95% CI": f"[{lo:.2f}, {hi:.2f}]" if n else "-",
-                     "CI width (SD)": est.width_sd.mean() if n else np.nan})
+                     "coverage": k / n if n else np.nan, "coverage 95% CI (scene-clustered)": f"[{lo:.2f}, {hi:.2f}]" if n else "-",
+                     "CI width (SD)": est.width_sd.mean() if n else np.nan,
+                     "% propensities clipped": 100 * (est.n_clipped / est.n).mean() if n else np.nan,
+                     "flagged FRAGILE": int(est.flagged.sum()),
+                     "coverage when not flagged": ok.mean() if len(ok) else np.nan})
     return pd.DataFrame(rows)
+
+
+def claim_kinds(d: pd.DataFrame) -> pd.Series:
+    """Label each E2 run: true claim, Claude's blind claim, or a wrong claim split into
+    'detectable' (some tested implication is false in the true graph) vs 'equivalent' (none is)."""
+    from .bench import MAX_TESTS, detectable, wrong_claims
+
+    det = {}
+    for scene in d.scene.unique():
+        o = C.oracle_claim(scene)
+        for w in wrong_claims(scene):
+            det[(scene, w.author)] = detectable(w, o, MAX_TESTS)
+
+    def kind(r):
+        if r.claim.startswith("oracle"):
+            return "true claim"
+        if r.claim.startswith("claude"):
+            return "Claude blind claim"
+        base = "wrong: ignores hidden confounding" if r.claim == "wrong: assumes no hidden confounding"             else "wrong: reversed edge at treatment"
+        return base + (" (detectable)" if det.get((r.scene, r.claim)) else " (equivalent — untestable)")
+    return d.apply(kind, axis=1)
 
 
 def e2_table() -> pd.DataFrame:
     d = _read("e2_falsification.jsonl")
     if d.empty:
         return d
-    def kind(c):
-        if c.startswith("oracle"):
-            return "true claim"
-        if c.startswith("claude"):
-            return "Claude blind claim"
-        return "wrong: hidden confounding ignored" if "hidden" in c else "wrong: reversed edge at treatment"
-    d["claim_kind"] = d.claim.map(kind)
+    d["claim_kind"] = claim_kinds(d)
     rows = []
-    for (k, m), g in d.groupby(["claim_kind", "method"]):
+    for (k, m, n_rows), g in d.groupby(["claim_kind", "method", "n"]):
         t = g[g.testable]
         r, n = int(t.rejected.sum()), len(t)
-        lo, hi = wilson(r, n)
-        rows.append({"claim": k, "method": m, "runs": len(g), "testable runs": n,
-                     "rejected": r, "rejection rate (testable)": r / n if n else np.nan,
-                     "95% CI": f"[{lo:.2f}, {hi:.2f}]" if n else "-",
-                     "rejection rate (all)": r / len(g)})
+        lo, hi = cluster_bootstrap(t.rejected.astype(float), t.scene) if n else (np.nan, np.nan)
+        rows.append({"claim": k, "method": m, "n": n_rows, "scenes": g.scene.nunique(), "runs": len(g),
+                     "testable runs": n, "rejected": r, "rejection rate": r / n if n else np.nan,
+                     "95% CI (scene-clustered)": f"[{lo:.2f}, {hi:.2f}]" if n else "-"})
     return pd.DataFrame(rows)
 
 
