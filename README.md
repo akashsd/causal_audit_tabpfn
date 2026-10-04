@@ -1,4 +1,4 @@
-# causalaudit: TabPFN-3.5 tests causal claims
+# CausalAudit: TabPFN-3.5 tests causal claims
 
 An agent writes a causal claim. TabPFN-3.5 tests the claim against the data.
 The tool estimates an effect only from a claim that the data does not contradict.
@@ -13,7 +13,7 @@ The result is an effect estimate that is wrong but looks precise.
 An LLM agent can write a good causal story.
 But nobody checks the assumptions in that story.
 
-## What causalaudit does
+## What CausalAudit does
 
 1. **Claim.** Claude writes a causal graph as a YAML file before it sees the data.
 2. **Identify.** The code finds which variables to adjust for, and which variables you must not adjust for.
@@ -34,7 +34,7 @@ claim.yaml ─► identify ─► test (TabPFN-CRT) ─► check consequences �
 ## Why TabPFN-3.5
 
 TabPFN-3.5 gives a full predictive distribution for each row. It needs no tuning.
-These two properties do two jobs in causalaudit:
+These two properties do two jobs in CausalAudit:
 
 - **Testing.** The CRT must sample a variable from its conditional distribution. TabPFN-3.5 does this directly.
 - **Estimation.** AIPW needs good propensity and outcome models on small data. TabPFN-3.5 gives them without a hyperparameter search.
@@ -87,7 +87,7 @@ CausalDS is a third-party benchmark with known true effects.
 4. Accept the TabPFN-3.5 license one time at <https://ux.priorlabs.ai> (Licenses tab). The local model weights need this.
 5. Run the audit on the NHEFS example:
    ```bash
-   uv run causalaudit audit --data data/nhefs/nhefs.csv --claim claims/nhefs/claude.yaml --out results/nhefs/claude
+   uv run CausalAudit audit --data data/nhefs/nhefs.csv --claim claims/nhefs/claude.yaml --out results/nhefs/claude
    ```
 6. Read the report in `results/nhefs/claude/audit.md`.
 7. Run the unit tests:
@@ -132,10 +132,10 @@ The subagent then wrote [the claim](claims/nhefs/claude.yaml).
 | Difference in means | +2.54 [1.59, 3.50] |
 | TabPFN S-learner with all columns (includes the mediator and `death`) | +2.45 |
 | AIPW with all columns | +3.22 [1.55, 4.89] |
-| **causalaudit**, TabPFN-3.5-Fast (local) | **+3.50 [2.53, 4.46]** |
-| causalaudit, TabPFN-3.5 (local) | +3.50 [2.54, 4.46] |
-| causalaudit, TabPFN-3.5 API (`v3.5`, learner `tabpfn_plus_api`) | +3.50 [2.54, 4.46] |
-| causalaudit, TabPFN-3.5 API with Thinking mode | +3.56 [2.51, 4.61] |
+| **CausalAudit**, TabPFN-3.5-Fast (local) | **+3.50 [2.53, 4.46]** |
+| CausalAudit, TabPFN-3.5 (local) | +3.50 [2.54, 4.46] |
+| CausalAudit, TabPFN-3.5 API (`v3.5`, learner `tabpfn_plus_api`) | +3.50 [2.54, 4.46] |
+| CausalAudit, TabPFN-3.5 API with Thinking mode | +3.56 [2.51, 4.61] |
 | Textbook (Hernán & Robins: IP weighting / standardization) | +3.4 [2.4, 4.5] / +3.5 [2.6, 4.5] |
 
 The local model and the API agree within 0.0002 kg.
@@ -215,24 +215,24 @@ We test each claim in 8 independent samples of 2000 rows.
 Run these commands. The times are for one RTX 3070.
 
 ```bash
-uv run causalaudit bench e1 --n 1000 --reps 10                                        # E1, about 2 h
-uv run causalaudit bench e1 --n 1000 --reps 10 --arms oracle --no-trap-only --learners lgbm_cv tabpfn
-uv run causalaudit bench e1 --n 300 --reps 20 --arms oracle --no-trap-only --learners tabpfn_fast lgbm lgbm_cv linear tabpfn --out e1_small_n.jsonl
-uv run causalaudit bench e1 --n 500 --reps 20 --arms oracle --no-trap-only --learners tabpfn_fast lgbm lgbm_cv linear tabpfn --out e1_small_n.jsonl
-uv run causalaudit bench e2 --n 2000 --reps 8 --methods tabpfn_crt gcm_lgbm partial_corr   # E2, about 6 h
-uv run python -m causalaudit.analyze                                                  # writes results/causal/summary.md
-uv run --group figures python -m causalaudit.figures                                  # writes the figures
+uv run CausalAudit bench e1 --n 1000 --reps 10                                        # E1, about 2 h
+uv run CausalAudit bench e1 --n 1000 --reps 10 --arms oracle --no-trap-only --learners lgbm_cv tabpfn
+uv run CausalAudit bench e1 --n 300 --reps 20 --arms oracle --no-trap-only --learners tabpfn_fast lgbm lgbm_cv linear tabpfn --out e1_small_n.jsonl
+uv run CausalAudit bench e1 --n 500 --reps 20 --arms oracle --no-trap-only --learners tabpfn_fast lgbm lgbm_cv linear tabpfn --out e1_small_n.jsonl
+uv run CausalAudit bench e2 --n 2000 --reps 8 --methods tabpfn_crt gcm_lgbm partial_corr   # E2, about 6 h
+uv run python -m CausalAudit.analyze                                                  # writes results/causal/summary.md
+uv run --group figures python -m CausalAudit.figures                                  # writes the figures
 uv run python examples/nhefs/modes.py --learners tabpfn_fast tabpfn tabpfn_plus_api tabpfn_thinking_api
 ```
 
 The code downloads the CausalDS files from Hugging Face when it needs them.
 The API learners use Prior Labs credits. The code caches each API prediction in `results/cache/`.
-The command `uv run causalaudit nhefs-data` downloads the NHEFS file again from its public URL.
+The command `uv run CausalAudit nhefs-data` downloads the NHEFS file again from its public URL.
 
 ## Repository layout
 
 ```
-src/causalaudit/   claim.py (graph logic), falsify.py (TabPFN-CRT, GCM, linear test), estimate.py (AIPW)
+src/CausalAudit/   claim.py (graph logic), falsify.py (TabPFN-CRT, GCM, linear test), estimate.py (AIPW)
                    audit.py (pipeline and report), causalds.py, bench.py, analyze.py, figures.py
 claims/            the blind claims and the hash manifests
 prompts/           the exact prompts for the subagents
