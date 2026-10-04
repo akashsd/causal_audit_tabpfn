@@ -1,0 +1,19 @@
+question: Does Surgical Debridement Required cause Tissue Oxidative Stress Level, and by how much?
+author: claude (blind)
+treatment: Surgical Debridement Required
+outcome: Tissue Oxidative Stress Level
+observed:
+  - Soft Tissue Injury Severity
+  - Surgical Debridement Required
+  - Tissue Oxidative Stress Level
+latent: []
+edges:
+  - src: Soft Tissue Injury Severity
+    dst: Surgical Debridement Required
+    confidence: high
+    why: Higher severity scores determine the need for operative debridement.
+  - src: Soft Tissue Injury Severity
+    dst: Tissue Oxidative Stress Level
+    confidence: high
+    why: Greater tissue trauma increases reactive oxygen species at the wound.
+notes: Story frames debridement and oxidative stress as parallel consequences of severity, so no direct debridement -> oxidative stress edge; the expected causal effect is zero, with confounding by severity producing a spurious association. Domain knowledge suggests debridement could lower (removing necrotic tissue) or transiently raise oxidative stress, but rejected given the story and early-phase measurement.

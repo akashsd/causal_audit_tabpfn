@@ -1,0 +1,23 @@
+question: Does Well Integrity Failure cause Groundwater Contamination, and by how much?
+author: claude (blind)
+treatment: Well Integrity Failure
+outcome: Groundwater Contamination
+observed:
+  - Hydraulic Fracturing Operations
+  - Well Integrity Failure
+  - Groundwater Contamination
+latent: []
+edges:
+  - src: Hydraulic Fracturing Operations
+    dst: Well Integrity Failure
+    confidence: high
+    why: High-pressure injection stresses cement and casing, causing integrity failures.
+  - src: Hydraulic Fracturing Operations
+    dst: Groundwater Contamination
+    confidence: high
+    why: Surface spills and induced fracture networks directly contaminate aquifers.
+  - src: Well Integrity Failure
+    dst: Groundwater Contamination
+    confidence: high
+    why: Damaged barriers create conduits for methane and chemicals to migrate upward.
+notes: Fracturing operations confound the treatment-outcome relation; adjust for it. Local geology (unmeasured) might affect both integrity failure and contamination, but not mentioned in the story.

@@ -1,0 +1,23 @@
+question: Does Systemic Sepsis cause Radiographic Infiltrate Volume, and by how much?
+author: claude (blind)
+treatment: Systemic Sepsis
+outcome: Radiographic Infiltrate Volume
+observed:
+  - Airway Bacterial Load
+  - Systemic Sepsis
+  - Radiographic Infiltrate Volume
+latent: []
+edges:
+  - src: Airway Bacterial Load
+    dst: Systemic Sepsis
+    confidence: high
+    why: Rising bacterial load leads to bloodstream translocation and sepsis.
+  - src: Airway Bacterial Load
+    dst: Radiographic Infiltrate Volume
+    confidence: high
+    why: Bacteria directly invade alveoli producing consolidation.
+  - src: Systemic Sepsis
+    dst: Radiographic Infiltrate Volume
+    confidence: high
+    why: Sepsis amplifies lung injury through inflammatory edema and ARDS.
+notes: Airway Bacterial Load confounds sepsis and infiltrate volume; adjust for it. Unmeasured host immune status could plausibly affect all three but the story does not mention it, so it is omitted.

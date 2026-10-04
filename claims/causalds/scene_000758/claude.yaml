@@ -1,0 +1,28 @@
+question: Does Civil War Onset cause Communist Victory, and by how much?
+author: claude (blind)
+treatment: Civil War Onset
+outcome: Communist Victory
+observed:
+  - Hour of Day of Initial Crisis
+  - Civil War Onset
+  - Communist Victory
+latent:
+  - State Military Professionalization
+edges:
+  - src: Hour of Day of Initial Crisis
+    dst: Civil War Onset
+    confidence: high
+    why: Nocturnal crises hamper government response and raise civil war probability.
+  - src: State Military Professionalization
+    dst: Civil War Onset
+    confidence: high
+    why: Professional militaries reduce the likelihood of civil war onset.
+  - src: Civil War Onset
+    dst: Communist Victory
+    confidence: high
+    why: Civil war is a necessary precondition for communist victory.
+  - src: State Military Professionalization
+    dst: Communist Victory
+    confidence: high
+    why: Professional militaries prosecute counterinsurgency and prevent communist victory.
+notes: No direct hour -> communist victory edge is described; hour is an instrument. Hour of day may act nonlinearly (night vs day) rather than monotonically. Professionalization is an unmeasured confounder.

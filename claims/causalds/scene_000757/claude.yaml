@@ -1,0 +1,23 @@
+question: Does Extremely Low Central Pressure Indicator cause Severe Wind Gusts Event, and by how much?
+author: claude (blind)
+treatment: Extremely Low Central Pressure Indicator
+outcome: Severe Wind Gusts Event
+observed:
+  - Tropical Cyclone Intensity
+  - Extremely Low Central Pressure Indicator
+  - Severe Wind Gusts Event
+latent: []
+edges:
+  - src: Tropical Cyclone Intensity
+    dst: Extremely Low Central Pressure Indicator
+    confidence: high
+    why: Story says catastrophic sustained winds drove the low-pressure indicator to activate.
+  - src: Tropical Cyclone Intensity
+    dst: Severe Wind Gusts Event
+    confidence: high
+    why: Extreme rotational force contributes to gust events.
+  - src: Extremely Low Central Pressure Indicator
+    dst: Severe Wind Gusts Event
+    confidence: medium
+    why: Story says the combination of intensity and low pressure triggered gust events.
+notes: Physically, pressure deficit drives wind rather than the reverse, but I follow the story's stated direction (intensity -> pressure indicator). Intensity confounds the treatment-outcome relation, so it should be adjusted for. Unmeasured storm environment (ocean heat content) could affect all three, but the story does not single it out, so no latent node.

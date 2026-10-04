@@ -1,0 +1,32 @@
+question: Does Randomized Financial Counseling Assignment cause Psychological Distress Inventory Score, and by how much?
+author: claude (blind)
+treatment: Randomized Financial Counseling Assignment
+outcome: Psychological Distress Inventory Score
+observed:
+  - Time Since Marital Dissolution
+  - Randomized Financial Counseling Assignment
+  - Post-Divorce Financial Stability Score
+  - Psychological Distress Inventory Score
+latent: []
+edges:
+  - src: Randomized Financial Counseling Assignment
+    dst: Post-Divorce Financial Stability Score
+    confidence: high
+    why: Counseling recipients developed higher financial stability.
+  - src: Time Since Marital Dissolution
+    dst: Post-Divorce Financial Stability Score
+    confidence: high
+    why: Time allows rebuilding of independent finances.
+  - src: Randomized Financial Counseling Assignment
+    dst: Psychological Distress Inventory Score
+    confidence: high
+    why: Counseling gives direct emotional support and coping, reducing distress.
+  - src: Time Since Marital Dissolution
+    dst: Psychological Distress Inventory Score
+    confidence: high
+    why: Time allows grief resolution and identity reconstruction.
+  - src: Post-Divorce Financial Stability Score
+    dst: Psychological Distress Inventory Score
+    confidence: high
+    why: Economic security protects against distress.
+notes: Assignment is randomized so there is no confounding; the total effect (direct plus via financial stability) is expected to be negative. Do not adjust for the mediator Financial Stability Score; Time Since Dissolution is an optional precision covariate.

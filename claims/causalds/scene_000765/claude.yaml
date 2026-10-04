@@ -1,0 +1,28 @@
+question: Does Active Lupus Flare cause Major Organ Failure Event, and by how much?
+author: claude (blind)
+treatment: Active Lupus Flare
+outcome: Major Organ Failure Event
+observed:
+  - Cumulative UV Radiation Exposure
+  - Active Lupus Flare
+  - Major Organ Failure Event
+latent:
+  - Baseline Immunological Reserve
+edges:
+  - src: Cumulative UV Radiation Exposure
+    dst: Active Lupus Flare
+    confidence: high
+    why: UV exposure triggers lupus flares.
+  - src: Baseline Immunological Reserve
+    dst: Active Lupus Flare
+    confidence: high
+    why: Diminished reserve raises flare propensity.
+  - src: Active Lupus Flare
+    dst: Major Organ Failure Event
+    confidence: high
+    why: Flares directly precipitate organ damage.
+  - src: Baseline Immunological Reserve
+    dst: Major Organ Failure Event
+    confidence: high
+    why: Reserve independently protects against organ failure.
+notes: Story explicitly rules out a direct UV -> organ failure edge; UV is an instrument. Immunological reserve is an unmeasured confounder.

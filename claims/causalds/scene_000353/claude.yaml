@@ -1,0 +1,28 @@
+question: Does Primary Lung Carcinoma cause Malignancy-Induced Respiratory Failure, and by how much?
+author: claude (blind)
+treatment: Primary Lung Carcinoma
+outcome: Malignancy-Induced Respiratory Failure
+observed:
+  - Residential Radon Exposure Level
+  - Primary Lung Carcinoma
+  - Malignancy-Induced Respiratory Failure
+latent:
+  - DNA Repair Pathway Genetic Risk Score
+edges:
+  - src: Residential Radon Exposure Level
+    dst: Primary Lung Carcinoma
+    confidence: high
+    why: Alpha radiation from radon damages DNA in bronchial epithelium.
+  - src: DNA Repair Pathway Genetic Risk Score
+    dst: Primary Lung Carcinoma
+    confidence: high
+    why: Impaired DNA repair accelerates mutagenesis.
+  - src: Primary Lung Carcinoma
+    dst: Malignancy-Induced Respiratory Failure
+    confidence: high
+    why: Tumor obstruction and spread directly cause respiratory failure.
+  - src: DNA Repair Pathway Genetic Risk Score
+    dst: Malignancy-Induced Respiratory Failure
+    confidence: high
+    why: Genetic score independently affects respiratory failure risk.
+notes: Radon and genetic score are independent roots. Considered a direct radon -> respiratory failure edge (radiation lung damage) but the story implies none; radon serves as an instrument.

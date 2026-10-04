@@ -1,0 +1,37 @@
+question: Does Significant Storm Surge Occurred cause Fatalities due to Wind and Storm Surge Only, and by how much?
+author: claude (blind)
+treatment: Significant Storm Surge Occurred
+outcome: Fatalities due to Wind and Storm Surge Only
+observed:
+  - Sea Surface Temperature
+  - Cyclone Maximum Wind Speed
+  - Total Precipitation
+  - Significant Storm Surge Occurred
+  - Fatalities due to Wind and Storm Surge Only
+latent: []
+edges:
+  - src: Sea Surface Temperature
+    dst: Cyclone Maximum Wind Speed
+    confidence: high
+    why: Warm ocean water thermodynamically fuels cyclone intensity.
+  - src: Sea Surface Temperature
+    dst: Total Precipitation
+    confidence: high
+    why: Story says ocean thermal energy contributes to moisture convergence and rainfall.
+  - src: Cyclone Maximum Wind Speed
+    dst: Total Precipitation
+    confidence: high
+    why: Story says storm rotational dynamics contribute to moisture convergence and rainfall.
+  - src: Cyclone Maximum Wind Speed
+    dst: Significant Storm Surge Occurred
+    confidence: high
+    why: Onshore wind momentum pushes water against the shoreline.
+  - src: Cyclone Maximum Wind Speed
+    dst: Fatalities due to Wind and Storm Surge Only
+    confidence: high
+    why: Deaths include those from the high-velocity wind assault itself.
+  - src: Significant Storm Surge Occurred
+    dst: Fatalities due to Wind and Storm Surge Only
+    confidence: high
+    why: Deaths include those from coastal inundation.
+notes: Wind speed confounds surge and fatalities; adjust for it (SST is upstream only). Total Precipitation is explicitly excluded as a cause of these fatalities, so no edge to the outcome. Did not add SST -> surge directly (thermal effects on surge are minor).

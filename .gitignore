@@ -1,0 +1,8 @@
+.env
+__pycache__/
+*.pyc
+.venv/
+*.log
+# benchmark downloads (fetched on demand from Hugging Face) and API prediction cache
+data/raw/
+results/cache/

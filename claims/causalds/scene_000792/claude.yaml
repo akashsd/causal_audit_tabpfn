@@ -1,0 +1,19 @@
+question: Does ABO Blood Group cause Standardized Administrative Processing Time from Capture to Execution, and by how much?
+author: claude (blind)
+treatment: ABO Blood Group
+outcome: Standardized Administrative Processing Time from Capture to Execution
+observed:
+  - ABO Blood Group
+  - Duration of Evasion before Capture
+  - Standardized Administrative Processing Time from Capture to Execution
+latent: []
+edges:
+  - src: ABO Blood Group
+    dst: Duration of Evasion before Capture
+    confidence: medium
+    why: Story claims Type O carriers sustained longer evasion through physiological advantages.
+  - src: Duration of Evasion before Capture
+    dst: Standardized Administrative Processing Time from Capture to Execution
+    confidence: medium
+    why: Longer evasion means capture in later, overcrowded occupation phases with slower processing.
+notes: Pure chain; no direct effect of blood group on processing time is described, so the total effect is mediated entirely by evasion duration. Domain-wise the blood-group -> evasion claim is biologically dubious, but I follow the story. The start date of fugitive status is unmeasured and would also affect capture phase, but it is plausibly independent of blood group, so not added as a latent confounder. Blood group is assigned at birth, so no confounders; empty adjustment set.

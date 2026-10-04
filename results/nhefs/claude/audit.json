@@ -1,0 +1,175 @@
+{
+ "question": "What is the average causal effect of quitting smoking on weight change?",
+ "treatment": "qsmk",
+ "outcome": "wt82_71",
+ "n": 1566,
+ "claim_author": "claude (blind)",
+ "learner": "tabpfn_fast",
+ "identification": {
+  "identifiable_by_adjustment": false,
+  "adjustment_set": null,
+  "forbidden": {
+   "death": "post-treatment variable (descendant of treatment)",
+   "smkintensity82_71": "mediator (on a causal path from treatment to outcome)"
+  }
+ },
+ "falsification": {
+  "method": "tabpfn_crt",
+  "rejected": false,
+  "n_tests": 9,
+  "tests": [
+   {
+    "test": "sex ⟂ price82 | {}",
+    "p": 0.4851,
+    "p_holm": 1.0
+   },
+   {
+    "test": "price82 ⟂ age | {sex, race}",
+    "p": 0.6931,
+    "p_holm": 1.0
+   },
+   {
+    "test": "price82 ⟂ education | {sex, race}",
+    "p": 0.0099,
+    "p_holm": 0.0891
+   },
+   {
+    "test": "price82 ⟂ smokeintensity | {sex, race, age, education, income}",
+    "p": 0.0099,
+    "p_holm": 0.0891
+   },
+   {
+    "test": "price82 ⟂ smokeyrs | {sex, race, age, education, income}",
+    "p": 0.2871,
+    "p_holm": 1.0
+   },
+   {
+    "test": "price82 ⟂ exercise | {sex, race, age, education, income}",
+    "p": 0.0693,
+    "p_holm": 0.4158
+   },
+   {
+    "test": "price82 ⟂ active | {sex, race, age, education, income}",
+    "p": 0.9802,
+    "p_holm": 1.0
+   },
+   {
+    "test": "price82 ⟂ wt71 | {sex, race, age, education, income}",
+    "p": 0.5644,
+    "p_holm": 1.0
+   },
+   {
+    "test": "price82 ⟂ alcoholfreq | {sex, race, age, education, income}",
+    "p": 0.0099,
+    "p_holm": 0.0891
+   }
+  ]
+ },
+ "conditional_on_no_latent_confounding": true,
+ "estimate": {
+  "estimator": "aipw",
+  "learner": "tabpfn_fast",
+  "ate": 3.4962261895896223,
+  "se": 0.4922318778670767,
+  "lo": 2.5314694369276336,
+  "hi": 4.460982942251611,
+  "n": 1566,
+  "adjust": [
+   "active",
+   "age",
+   "alcoholfreq",
+   "education",
+   "exercise",
+   "income",
+   "price82",
+   "race",
+   "sex",
+   "smokeintensity",
+   "smokeyrs",
+   "wt71"
+  ],
+  "propensity_min": 0.06163841858506203,
+  "propensity_max": 0.6232059001922607,
+  "n_clipped": 0
+ },
+ "sensitivity": {
+  "e_value": {
+   "estimate": 2.36,
+   "ci_bound": 2.01
+  }
+ },
+ "overlap": {
+  "propensity_range": [
+   0.062,
+   0.623
+  ],
+  "n_clipped": 0,
+  "ok": true
+ },
+ "contrasts": {
+  "naive_difference": {
+   "estimator": "difference",
+   "learner": "-",
+   "ate": 2.5405814549558885,
+   "se": 0.48746037085467864,
+   "lo": 1.5851766841901802,
+   "hi": 3.495986225721597,
+   "n": 1566,
+   "adjust": []
+  },
+  "tabpfn_all_features_s_learner": {
+   "estimator": "s_learner",
+   "learner": "tabpfn_fast",
+   "ate": 2.4542629034064385,
+   "se": NaN,
+   "lo": NaN,
+   "hi": NaN,
+   "n": 1566,
+   "adjust": [
+    "sex",
+    "race",
+    "age",
+    "education",
+    "income",
+    "smokeintensity",
+    "smokeyrs",
+    "exercise",
+    "active",
+    "wt71",
+    "alcoholfreq",
+    "smkintensity82_71",
+    "price82",
+    "death"
+   ]
+  },
+  "aipw_all_features": {
+   "estimator": "aipw",
+   "learner": "tabpfn_fast",
+   "ate": 3.218730716355775,
+   "se": 0.8513521444800767,
+   "lo": 1.550111175013884,
+   "hi": 4.8873502576976655,
+   "n": 1566,
+   "adjust": [
+    "sex",
+    "race",
+    "age",
+    "education",
+    "income",
+    "smokeintensity",
+    "smokeyrs",
+    "exercise",
+    "active",
+    "wt71",
+    "alcoholfreq",
+    "smkintensity82_71",
+    "price82",
+    "death"
+   ],
+   "propensity_min": 3.999311229563318e-05,
+   "propensity_max": 0.9969058632850647,
+   "n_clipped": 1227
+  }
+ },
+ "verdict": "NOT IDENTIFIED WITHOUT AN EXTRA ASSUMPTION — the claim names unmeasured confounding (incident_illness, state_of_residence). If it were absent, ATE = +3.496 (95% CI +2.531 to +4.461); to explain this away it would need a risk-ratio association of ≥ 2.36 with both treatment and outcome (≥ 2.01 to move the CI to include zero)."
+}

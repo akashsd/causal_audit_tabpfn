@@ -1,0 +1,23 @@
+question: Does High Generation Output Status cause Critical Power Losses Status, and by how much?
+author: claude (blind)
+treatment: High Generation Output Status
+outcome: Critical Power Losses Status
+observed:
+  - High Generation Output Status
+  - Transmission Line Current Load
+  - Critical Power Losses Status
+latent: []
+edges:
+  - src: High Generation Output Status
+    dst: Transmission Line Current Load
+    confidence: high
+    why: Excess generation pushes higher current through transmission conductors.
+  - src: Transmission Line Current Load
+    dst: Critical Power Losses Status
+    confidence: high
+    why: Resistive (I^2 R) heat losses rise with current.
+  - src: High Generation Output Status
+    dst: Critical Power Losses Status
+    confidence: medium
+    why: Story says high generation also adds congestion and transformer loading losses directly.
+notes: Current load is a mediator; total effect includes both paths. System demand/weather (unmeasured) could drive both generation and load, but the story does not mention it.

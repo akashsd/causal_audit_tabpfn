@@ -1,0 +1,28 @@
+question: Does Primary Lung Cancer Diagnosis cause Distant Metastasis Presence, and by how much?
+author: claude (blind)
+treatment: Primary Lung Cancer Diagnosis
+outcome: Distant Metastasis Presence
+observed:
+  - Cumulative Childhood Residential Radon Exposure
+  - Primary Lung Cancer Diagnosis
+  - Distant Metastasis Presence
+latent:
+  - Constitutional Immune Surveillance Efficacy
+edges:
+  - src: Cumulative Childhood Residential Radon Exposure
+    dst: Primary Lung Cancer Diagnosis
+    confidence: high
+    why: Radon ionizing radiation is carcinogenic to bronchial epithelium.
+  - src: Constitutional Immune Surveillance Efficacy
+    dst: Primary Lung Cancer Diagnosis
+    confidence: high
+    why: Immune surveillance determines whether malignant clones are eradicated.
+  - src: Primary Lung Cancer Diagnosis
+    dst: Distant Metastasis Presence
+    confidence: high
+    why: Metastasis requires an established primary malignancy.
+  - src: Constitutional Immune Surveillance Efficacy
+    dst: Distant Metastasis Presence
+    confidence: high
+    why: Immunity modulates whether circulating tumor cells colonize.
+notes: Radon is independent of immune efficacy and has no stated direct effect on metastasis, so it is an instrument. Immune efficacy is an unmeasured confounder.

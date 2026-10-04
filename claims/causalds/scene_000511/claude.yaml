@@ -1,0 +1,43 @@
+question: Does Katipunan Chapter Established in Province cause Monthly Frequency of Armed Revolutionary Skirmishes, and by how much?
+author: claude (blind)
+treatment: Katipunan Chapter Established in Province
+outcome: Monthly Frequency of Armed Revolutionary Skirmishes
+observed:
+  - Level of Filipino Nationalist Consciousness
+  - La Liga Filipina Membership
+  - "Sales of Rizal's Novels Noli Me Tangere"
+  - Propaganda Movement Anti-Friar Pamphlet Distribution
+  - Enrollment in Secular Private Academies
+  - Katipunan Chapter Established in Province
+  - Monthly Frequency of Armed Revolutionary Skirmishes
+latent: []
+edges:
+  - src: Level of Filipino Nationalist Consciousness
+    dst: "Sales of Rizal's Novels Noli Me Tangere"
+    confidence: high
+    why: Nationalist sentiment drove demand for Rizal's novels.
+  - src: Level of Filipino Nationalist Consciousness
+    dst: Enrollment in Secular Private Academies
+    confidence: high
+    why: Parents moved children out of friar schools as consciousness rose.
+  - src: Level of Filipino Nationalist Consciousness
+    dst: Propaganda Movement Anti-Friar Pamphlet Distribution
+    confidence: high
+    why: Pamphleteering escalated proportionally with nationalist sentiment.
+  - src: Level of Filipino Nationalist Consciousness
+    dst: La Liga Filipina Membership
+    confidence: high
+    why: Consciousness drove membership in Rizal's reformist association.
+  - src: Level of Filipino Nationalist Consciousness
+    dst: Katipunan Chapter Established in Province
+    confidence: high
+    why: Swelling consciousness prompted underground revolutionary cells.
+  - src: Level of Filipino Nationalist Consciousness
+    dst: Monthly Frequency of Armed Revolutionary Skirmishes
+    confidence: high
+    why: Higher fervor caused more fighting regardless of organizational presence.
+  - src: Katipunan Chapter Established in Province
+    dst: Monthly Frequency of Armed Revolutionary Skirmishes
+    confidence: high
+    why: Discovered secret societies were forced into open rebellion.
+notes: Nationalist consciousness confounds treatment and outcome; adjust for it. Considered La Liga Filipina Membership -> Katipunan (historically the Katipunan grew from Liga members) and pamphlets/novels -> consciousness feedback, but the story attributes all of these only to consciousness, so they were rejected. The other four expressions are siblings and not needed for adjustment.

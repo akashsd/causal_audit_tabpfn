@@ -1,0 +1,42 @@
+question: Does Randomized Body Camera Eligibility cause Administrative Sanctions, and by how much?
+author: claude (blind)
+treatment: Randomized Body Camera Eligibility
+outcome: Administrative Sanctions
+observed:
+  - State Lottery Revenue Allocation
+  - Aggressive Enforcement Philosophy
+  - Randomized Body Camera Eligibility
+  - Use-of-Force Incidents
+  - Vehicle Procurement Budget
+  - Administrative Sanctions
+latent: []
+edges:
+  - src: Randomized Body Camera Eligibility
+    dst: Use-of-Force Incidents
+    confidence: high
+    why: Story says camera assignment directly determined use-of-force frequency (moderating/deterrent effect).
+  - src: Aggressive Enforcement Philosophy
+    dst: Use-of-Force Incidents
+    confidence: high
+    why: Aggressive philosophies predict higher incident counts per the story.
+  - src: Use-of-Force Incidents
+    dst: Administrative Sanctions
+    confidence: high
+    why: Each force incident triggers a mandatory review board that can produce sanctions.
+  - src: Randomized Body Camera Eligibility
+    dst: Administrative Sanctions
+    confidence: medium
+    why: Officers without cameras faced more disciplinary findings for identical behavior (detection effect).
+  - src: Aggressive Enforcement Philosophy
+    dst: Administrative Sanctions
+    confidence: medium
+    why: Disposition effect on procedural violations beyond force incidents.
+  - src: State Lottery Revenue Allocation
+    dst: Vehicle Procurement Budget
+    confidence: high
+    why: Lottery revenue sets baseline fleet funding.
+  - src: Use-of-Force Incidents
+    dst: Vehicle Procurement Budget
+    confidence: medium
+    why: Force incidents damage vehicles and require tactical vehicles, raising procurement needs.
+notes: Camera eligibility is randomized so it has no parents; the total effect on sanctions runs through both the direct path and the use-of-force mediator. Lottery revenue is exogenous and unrelated to the treatment. Vehicle budget is a descendant of the mediator and should not be adjusted for. Rejected any edge from Lottery to enforcement variables.

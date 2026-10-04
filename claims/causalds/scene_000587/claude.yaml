@@ -1,0 +1,28 @@
+question: Does High Occupational Stress Status cause Incident Ischemic Stroke Event, and by how much?
+author: claude (blind)
+treatment: High Occupational Stress Status
+outcome: Incident Ischemic Stroke Event
+observed:
+  - Time of Day of Baseline Stress Assessment
+  - High Occupational Stress Status
+  - Incident Ischemic Stroke Event
+latent:
+  - Unmeasured Genetic Predisposition to Cardiovascular Disease
+edges:
+  - src: Time of Day of Baseline Stress Assessment
+    dst: High Occupational Stress Status
+    confidence: high
+    why: Circadian cortisol variation biases the stress classification.
+  - src: Unmeasured Genetic Predisposition to Cardiovascular Disease
+    dst: High Occupational Stress Status
+    confidence: high
+    why: Genetic liability shapes stress reactivity and occupational selection.
+  - src: High Occupational Stress Status
+    dst: Incident Ischemic Stroke Event
+    confidence: high
+    why: Chronic stress promotes hypertension, inflammation and endothelial dysfunction.
+  - src: Unmeasured Genetic Predisposition to Cardiovascular Disease
+    dst: Incident Ischemic Stroke Event
+    confidence: high
+    why: Inherited thrombotic and atherosclerotic vulnerability directly raises stroke risk.
+notes: Assessment timing has no plausible direct effect on stroke, so it serves as an instrument. Genetic predisposition is an unmeasured confounder.

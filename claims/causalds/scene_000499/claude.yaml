@@ -1,0 +1,23 @@
+question: Does Presence of Mechanical Skin Abrasion cause Contact Dermatitis Severity, and by how much?
+author: claude (blind)
+treatment: Presence of Mechanical Skin Abrasion
+outcome: Contact Dermatitis Severity
+observed:
+  - Daily Duration of Scouring Pad Use
+  - Presence of Mechanical Skin Abrasion
+  - Contact Dermatitis Severity
+latent: []
+edges:
+  - src: Daily Duration of Scouring Pad Use
+    dst: Presence of Mechanical Skin Abrasion
+    confidence: high
+    why: Sustained abrasive contact damages the skin's protective layers.
+  - src: Daily Duration of Scouring Pad Use
+    dst: Contact Dermatitis Severity
+    confidence: high
+    why: Chemical residues and friction directly inflame tissue.
+  - src: Presence of Mechanical Skin Abrasion
+    dst: Contact Dermatitis Severity
+    confidence: high
+    why: Abrasion allows deeper irritant penetration and extra inflammation.
+notes: Scouring pad duration confounds; adjust for it. Expected effect is positive. Individual skin susceptibility could be a latent common cause but is not mentioned in the story.

@@ -1,0 +1,23 @@
+question: Does Hepatic Niacin Accumulation Exceeding Toxic Threshold cause Niacin-Induced Liver Injury, and by how much?
+author: claude (blind)
+treatment: Hepatic Niacin Accumulation Exceeding Toxic Threshold
+outcome: Niacin-Induced Liver Injury
+observed:
+  - High-Dose Niacin Supplementation
+  - Hepatic Niacin Accumulation Exceeding Toxic Threshold
+  - Niacin-Induced Liver Injury
+latent: []
+edges:
+  - src: High-Dose Niacin Supplementation
+    dst: Hepatic Niacin Accumulation Exceeding Toxic Threshold
+    confidence: high
+    why: Accumulation threshold arose directly from the magnitude and persistence of dosing.
+  - src: High-Dose Niacin Supplementation
+    dst: Niacin-Induced Liver Injury
+    confidence: high
+    why: Direct metabolic stress and cytotoxicity on hepatocytes independent of saturation.
+  - src: Hepatic Niacin Accumulation Exceeding Toxic Threshold
+    dst: Niacin-Induced Liver Injury
+    confidence: high
+    why: Pathway saturation and reactive intermediates cause additional damage once threshold exceeded.
+notes: Niacin dose confounds accumulation and injury; adjust for it. Individual hepatic metabolic capacity (unmeasured) could affect both accumulation and injury, but the story does not mention it, so not added as latent.

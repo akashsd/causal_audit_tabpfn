@@ -1,0 +1,23 @@
+question: Does Wood Moisture Above Fiber Saturation Point cause Dimensional Change in Wood, and by how much?
+author: claude (blind)
+treatment: Wood Moisture Above Fiber Saturation Point
+outcome: Dimensional Change in Wood
+observed:
+  - Ambient Relative Humidity
+  - Wood Moisture Above Fiber Saturation Point
+  - Dimensional Change in Wood
+latent: []
+edges:
+  - src: Ambient Relative Humidity
+    dst: Wood Moisture Above Fiber Saturation Point
+    confidence: high
+    why: High humidity raises wood moisture above the fiber saturation threshold.
+  - src: Ambient Relative Humidity
+    dst: Dimensional Change in Wood
+    confidence: high
+    why: Story cites direct desorptive pressure from dry air driving contraction.
+  - src: Wood Moisture Above Fiber Saturation Point
+    dst: Dimensional Change in Wood
+    confidence: high
+    why: Above saturation, cell walls cannot absorb more bound water so dimensional change is small.
+notes: Ambient humidity confounds; adjust for it. Expected effect of being above FSP on dimensional change is negative (smaller change). Humidity and FSP state may interact physically.

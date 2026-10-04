@@ -1,0 +1,2 @@
+# Pre-registered claims are hash-verified (claims/causalds/MANIFEST.sha256): never convert line endings
+claims/** -text

@@ -1,0 +1,23 @@
+question: Does Low Frequency Noise Emission cause Noise Complaint Filed, and by how much?
+author: claude (blind)
+treatment: Low Frequency Noise Emission
+outcome: Noise Complaint Filed
+observed:
+  - Rotor Diameter
+  - Low Frequency Noise Emission
+  - Noise Complaint Filed
+latent: []
+edges:
+  - src: Rotor Diameter
+    dst: Low Frequency Noise Emission
+    confidence: high
+    why: Story says the large rotor diameter creates turbulence that generates low frequency noise.
+  - src: Rotor Diameter
+    dst: Noise Complaint Filed
+    confidence: medium
+    why: Story says the turbine's physical size causes visual-impact anxiety that drives complaints directly.
+  - src: Low Frequency Noise Emission
+    dst: Noise Complaint Filed
+    confidence: high
+    why: Story says infrasound pulses disrupt sleep and lead residents to file complaints.
+notes: Rotor Diameter confounds treatment and outcome, so it must be adjusted for. The direct Rotor Diameter -> complaint edge (visual impact) is plausible but its strength is uncertain.

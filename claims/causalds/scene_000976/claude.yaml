@@ -1,0 +1,37 @@
+question: Does Roof Timber Ignition cause Temple Fire Damage Area, and by how much?
+author: claude (blind)
+treatment: Roof Timber Ignition
+outcome: Temple Fire Damage Area
+observed:
+  - Atmospheric Electrical Instability Index
+  - Cloud-to-Ground Electric Potential
+  - Lightning Strike Current
+  - Roof Timber Ignition
+  - Temple Fire Damage Area
+latent: []
+edges:
+  - src: Atmospheric Electrical Instability Index
+    dst: Cloud-to-Ground Electric Potential
+    confidence: high
+    why: Atmospheric turbulence drove the voltage differential upward.
+  - src: Atmospheric Electrical Instability Index
+    dst: Lightning Strike Current
+    confidence: medium
+    why: Story says the combination of instability and potential generated the strike current.
+  - src: Cloud-to-Ground Electric Potential
+    dst: Lightning Strike Current
+    confidence: high
+    why: Higher voltage differential produces larger discharge current.
+  - src: Lightning Strike Current
+    dst: Roof Timber Ignition
+    confidence: high
+    why: Thermal energy from the current ignited the roof timbers.
+  - src: Lightning Strike Current
+    dst: Temple Fire Damage Area
+    confidence: high
+    why: Damage depended directly on the raw power of the lightning discharge.
+  - src: Roof Timber Ignition
+    dst: Temple Fire Damage Area
+    confidence: high
+    why: Flames spread from ignited timbers into the interior halls.
+notes: Lightning Strike Current confounds ignition and damage area and blocks all back-door paths from upstream atmospheric variables; adjusting for it suffices. Rejected direct edges from instability/potential to ignition or damage since the story routes them through the strike current.

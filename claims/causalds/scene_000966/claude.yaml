@@ -1,0 +1,19 @@
+question: Does Worker Chemical Inhalation Injury cause Major Structural Damage, and by how much?
+author: claude (blind)
+treatment: Worker Chemical Inhalation Injury
+outcome: Major Structural Damage
+observed:
+  - Explosion Overpressure
+  - Worker Chemical Inhalation Injury
+  - Major Structural Damage
+latent: []
+edges:
+  - src: Explosion Overpressure
+    dst: Major Structural Damage
+    confidence: high
+    why: Shock wave stresses walls and beams beyond design limits.
+  - src: Explosion Overpressure
+    dst: Worker Chemical Inhalation Injury
+    confidence: high
+    why: Blast ruptured tanks and lines, dispersing solvent vapors that workers inhaled.
+notes: Story explicitly says structural damage and inhalation injury were both caused by overpressure and not by each other, so no edge between treatment and outcome; expected causal effect is zero. Any association is confounding by overpressure, which must be adjusted for. Injuries cannot physically cause structural damage.

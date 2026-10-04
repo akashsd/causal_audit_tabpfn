@@ -1,0 +1,23 @@
+question: Does Allied Amphibious Invasion cause Urban Infrastructure Destruction, and by how much?
+author: claude (blind)
+treatment: Allied Amphibious Invasion
+outcome: Urban Infrastructure Destruction
+observed:
+  - Allied Amphibious Invasion
+  - Naval Bombardment Intensity
+  - Urban Infrastructure Destruction
+latent: []
+edges:
+  - src: Allied Amphibious Invasion
+    dst: Naval Bombardment Intensity
+    confidence: high
+    why: The invasion decision triggered calculation of required naval ordnance.
+  - src: Naval Bombardment Intensity
+    dst: Urban Infrastructure Destruction
+    confidence: high
+    why: Each ton of ordnance fractures concrete and collapses structures.
+  - src: Allied Amphibious Invasion
+    dst: Urban Infrastructure Destruction
+    confidence: high
+    why: Ground forces and armor advancing through the city cause destruction directly.
+notes: Bombardment is a mediator, not a confounder; do not adjust for it when estimating the total effect. Strategic importance of the city (unmeasured) could drive both invasion and destruction, but the story frames invasion as a commander's decision with no stated confounders.

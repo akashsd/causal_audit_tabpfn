@@ -1,0 +1,29 @@
+question: Does Randomized High-Yield Seed Assignment cause Randomized Irrigation Water Volume, and by how much?
+author: claude (blind)
+treatment: Randomized High-Yield Seed Assignment
+outcome: Randomized Irrigation Water Volume
+observed:
+  - Randomized Potassium Fertilizer Rate
+  - Seasonal Solar Radiation Accumulation
+  - Randomized High-Yield Seed Assignment
+  - Randomized Irrigation Water Volume
+  - Total Crop Yield
+latent: []
+edges:
+  - src: Randomized High-Yield Seed Assignment
+    dst: Total Crop Yield
+    confidence: high
+    why: Improved cultivars raise the genetic yield ceiling.
+  - src: Randomized Irrigation Water Volume
+    dst: Total Crop Yield
+    confidence: high
+    why: Water maintains turgor and nutrient transport.
+  - src: Randomized Potassium Fertilizer Rate
+    dst: Total Crop Yield
+    confidence: high
+    why: Potassium enhances photosynthetic enzymes and carbohydrate translocation.
+  - src: Seasonal Solar Radiation Accumulation
+    dst: Total Crop Yield
+    confidence: high
+    why: Radiant energy drives carbon fixation.
+notes: Seed and irrigation are independently randomized, so the expected effect of seed on irrigation is zero. Total Crop Yield is a collider and must NOT be adjusted for.

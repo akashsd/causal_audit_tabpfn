@@ -1,0 +1,23 @@
+question: Does Installation of Livestock Fencing cause Habitat Fragmentation Index, and by how much?
+author: claude (blind)
+treatment: Installation of Livestock Fencing
+outcome: Habitat Fragmentation Index
+observed:
+  - Annual Rate of Agricultural Expansion
+  - Installation of Livestock Fencing
+  - Habitat Fragmentation Index
+latent: []
+edges:
+  - src: Annual Rate of Agricultural Expansion
+    dst: Habitat Fragmentation Index
+    confidence: high
+    why: Clearing forest for cropland directly breaks tracts into more patches.
+  - src: Annual Rate of Agricultural Expansion
+    dst: Installation of Livestock Fencing
+    confidence: high
+    why: Agricultural intensification leads landowners to fence new pastures.
+  - src: Installation of Livestock Fencing
+    dst: Habitat Fragmentation Index
+    confidence: medium
+    why: Fences block wildlife movement, further isolating patches per the story.
+notes: Agricultural expansion confounds fencing and fragmentation; adjust for it. Domain-wise, a patch-count index might not literally change from fences, but the story says it increases, so I keep the edge.

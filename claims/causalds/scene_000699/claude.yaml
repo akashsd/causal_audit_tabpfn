@@ -1,0 +1,19 @@
+question: Does Aspirin Administration cause Duration of Strenuous Exercise, and by how much?
+author: claude (blind)
+treatment: Aspirin Administration
+outcome: Duration of Strenuous Exercise
+observed:
+  - Aspirin Administration
+  - Duration of Strenuous Exercise
+  - Core Body Temperature
+latent: []
+edges:
+  - src: Duration of Strenuous Exercise
+    dst: Core Body Temperature
+    confidence: high
+    why: Core temperature rises with longer exertion per the story and physiology.
+  - src: Aspirin Administration
+    dst: Core Body Temperature
+    confidence: medium
+    why: Story says aspirin altered hypothalamic setpoint and heat dissipation.
+notes: The story explicitly states aspirin and exercise duration show no dependence on each other (both set by design), so I claim no edge between treatment and outcome; expected causal effect is zero. Core Body Temperature is a collider and must not be adjusted for. Physiologically, aspirin could plausibly affect exercise tolerance, but the story rules it out.

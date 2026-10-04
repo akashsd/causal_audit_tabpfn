@@ -1,0 +1,28 @@
+question: Does Combat Zone Deployment cause Major Depressive Disorder Diagnosis, and by how much?
+author: claude (blind)
+treatment: Combat Zone Deployment
+outcome: Major Depressive Disorder Diagnosis
+observed:
+  - Blinded Randomization Code for Deployment
+  - Combat Zone Deployment
+  - Major Depressive Disorder Diagnosis
+latent:
+  - Pre-enlistment Psychological Resilience
+edges:
+  - src: Blinded Randomization Code for Deployment
+    dst: Combat Zone Deployment
+    confidence: high
+    why: Story says the random code probabilistically governs deployment assignment.
+  - src: Pre-enlistment Psychological Resilience
+    dst: Combat Zone Deployment
+    confidence: high
+    why: Higher resilience makes members more likely to be cleared for combat roles.
+  - src: Combat Zone Deployment
+    dst: Major Depressive Disorder Diagnosis
+    confidence: high
+    why: Deployment directly elevates risk of MDD diagnosis.
+  - src: Pre-enlistment Psychological Resilience
+    dst: Major Depressive Disorder Diagnosis
+    confidence: high
+    why: Resilience has its own protective effect on depression regardless of deployment.
+notes: The randomization code acts as an instrument; no direct code -> MDD edge since it is an arbitrary blinded number. Resilience is an unmeasured confounder, so backdoor adjustment is impossible; IV estimation is the identification route.

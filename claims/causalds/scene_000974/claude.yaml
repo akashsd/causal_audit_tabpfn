@@ -1,0 +1,28 @@
+question: Does Famine Occurrence cause Induced Abortion Practice, and by how much?
+author: claude (blind)
+treatment: Famine Occurrence
+outcome: Induced Abortion Practice
+observed:
+  - Severe Drought Event
+  - Famine Occurrence
+  - Induced Abortion Practice
+latent:
+  - Chronic Regional Poverty Level
+edges:
+  - src: Severe Drought Event
+    dst: Famine Occurrence
+    confidence: high
+    why: Drought destroyed the rice harvest.
+  - src: Chronic Regional Poverty Level
+    dst: Famine Occurrence
+    confidence: high
+    why: Poor communities lacked grain reserves to buffer harvest failures.
+  - src: Famine Occurrence
+    dst: Induced Abortion Practice
+    confidence: high
+    why: Prohibitive food prices pushed households to fertility control.
+  - src: Chronic Regional Poverty Level
+    dst: Induced Abortion Practice
+    confidence: high
+    why: Poverty established prior cultural patterns of family limitation.
+notes: Story explicitly rules out a direct drought -> abortion edge; drought is an instrument. Poverty is unmeasured (rarely in censuses) and confounds famine and abortion.

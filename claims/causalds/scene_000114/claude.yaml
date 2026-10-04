@@ -1,0 +1,28 @@
+question: Does Officer-Involved Shooting Incidents cause Calls for an Independent Civilian Police Review Board, and by how much?
+author: claude (blind)
+treatment: Officer-Involved Shooting Incidents
+outcome: Calls for an Independent Civilian Police Review Board
+observed:
+  - Neighborhood Violent Crime Rate
+  - Officer-Involved Shooting Incidents
+  - Calls for an Independent Civilian Police Review Board
+latent:
+  - Underlying Community Distrust in Police
+edges:
+  - src: Neighborhood Violent Crime Rate
+    dst: Officer-Involved Shooting Incidents
+    confidence: high
+    why: More violent crime produces more armed confrontations.
+  - src: Underlying Community Distrust in Police
+    dst: Officer-Involved Shooting Incidents
+    confidence: high
+    why: Distrust erodes de-escalation during stops, increasing shootings.
+  - src: Officer-Involved Shooting Incidents
+    dst: Calls for an Independent Civilian Police Review Board
+    confidence: high
+    why: Mounting shootings trigger campaigns for civilian oversight.
+  - src: Underlying Community Distrust in Police
+    dst: Calls for an Independent Civilian Police Review Board
+    confidence: high
+    why: Calls arise when community resentment is already primed.
+notes: Story explicitly rules out a direct crime rate -> review board calls edge. Distrust is an unmeasured confounder; crime rate is a candidate instrument. No link between crime rate and distrust is stated, though in reality they could be correlated.

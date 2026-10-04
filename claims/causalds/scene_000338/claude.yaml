@@ -1,0 +1,19 @@
+question: Does Earthquake Occurrence cause Heavy Rainfall Event, and by how much?
+author: claude (blind)
+treatment: Earthquake Occurrence
+outcome: Heavy Rainfall Event
+observed:
+  - Earthquake Occurrence
+  - Heavy Rainfall Event
+  - Infrastructure Damage Cost
+latent: []
+edges:
+  - src: Earthquake Occurrence
+    dst: Infrastructure Damage Cost
+    confidence: high
+    why: Ground acceleration and liquefaction damage buildings and transport networks.
+  - src: Heavy Rainfall Event
+    dst: Infrastructure Damage Cost
+    confidence: high
+    why: Flash flooding and drainage failures add water and erosion damage.
+notes: Story states explicitly that the two hazards are exogenous with no causal link, so the expected effect of Earthquake Occurrence on Heavy Rainfall Event is zero. Infrastructure Damage Cost is a collider and must NOT be adjusted for.

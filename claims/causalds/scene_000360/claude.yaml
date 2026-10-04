@@ -1,0 +1,28 @@
+question: Does Current Unemployment Status cause Financial Exclusion Index, and by how much?
+author: claude (blind)
+treatment: Current Unemployment Status
+outcome: Financial Exclusion Index
+observed:
+  - Randomized Layoff Assignment
+  - Current Unemployment Status
+  - Financial Exclusion Index
+latent:
+  - Pre-existing Chronic Health Condition
+edges:
+  - src: Randomized Layoff Assignment
+    dst: Current Unemployment Status
+    confidence: high
+    why: Lottery-assigned separation notices push workers into unemployment.
+  - src: Pre-existing Chronic Health Condition
+    dst: Current Unemployment Status
+    confidence: high
+    why: Chronic illness creates barriers to retention and reemployment.
+  - src: Current Unemployment Status
+    dst: Financial Exclusion Index
+    confidence: high
+    why: Job loss erodes financial stability.
+  - src: Pre-existing Chronic Health Condition
+    dst: Financial Exclusion Index
+    confidence: high
+    why: Medical expenses and credit impairment independently raise exclusion.
+notes: Story explicitly states no direct lottery -> financial exclusion effect; the lottery is a valid instrument. Health condition is an unmeasured confounder.

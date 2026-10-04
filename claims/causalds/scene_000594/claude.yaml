@@ -1,0 +1,29 @@
+question: Does Secondary Road Landslide Occurrence cause Duration of Beach Closure, and by how much?
+author: claude (blind)
+treatment: Secondary Road Landslide Occurrence
+outcome: Duration of Beach Closure
+observed:
+  - Secondary Road Landslide Occurrence
+  - Proportion of Secondary Road Network Closed
+  - Air Ambulance Response Time
+  - Maritime Relief Supply Transit Delay
+  - Duration of Beach Closure
+latent: []
+edges:
+  - src: Secondary Road Landslide Occurrence
+    dst: Proportion of Secondary Road Network Closed
+    confidence: high
+    why: Landslide debris severs access corridors, closing roads.
+  - src: Proportion of Secondary Road Network Closed
+    dst: Air Ambulance Response Time
+    confidence: high
+    why: Blocked ground logistics force longer helicopter response paths.
+  - src: Proportion of Secondary Road Network Closed
+    dst: Maritime Relief Supply Transit Delay
+    confidence: high
+    why: Blocked roads force rerouted sea-based supply chains.
+  - src: Proportion of Secondary Road Network Closed
+    dst: Duration of Beach Closure
+    confidence: high
+    why: Closed roads prevent lifeguards and equipment reaching the shore.
+notes: Effect is fully mediated by road closure proportion; there are no confounders, so the unadjusted estimate is valid and the mediator must not be adjusted for. Hurricane rainfall intensity is a plausible latent common cause of landslides and beach closure, but the story attributes beach closure only to road access, so it was not added.

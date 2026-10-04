@@ -1,0 +1,28 @@
+question: Does Mold Presence cause Spoilage Severity Index, and by how much?
+author: claude (blind)
+treatment: Mold Presence
+outcome: Spoilage Severity Index
+observed:
+  - Antifungal Preservative Concentration
+  - Mold Presence
+  - Spoilage Severity Index
+latent:
+  - Intrinsic Water Activity
+edges:
+  - src: Antifungal Preservative Concentration
+    dst: Mold Presence
+    confidence: high
+    why: Preservative concentration determines whether mold develops.
+  - src: Intrinsic Water Activity
+    dst: Mold Presence
+    confidence: high
+    why: Unbound water availability favors microbial colonization.
+  - src: Mold Presence
+    dst: Spoilage Severity Index
+    confidence: high
+    why: Visible decay and off-flavors from mold add to sensory spoilage.
+  - src: Intrinsic Water Activity
+    dst: Spoilage Severity Index
+    confidence: high
+    why: Water activity accelerates enzymatic spoilage regardless of mold.
+notes: Story explicitly rules out a direct preservative -> spoilage edge; preservative is an instrument. Water activity is an unmeasured confounder.

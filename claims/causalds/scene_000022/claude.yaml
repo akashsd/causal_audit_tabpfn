@@ -1,0 +1,42 @@
+question: Does Clinical Dementia Diagnosis cause Cholinesterase Inhibitor Prescription, and by how much?
+author: claude (blind)
+treatment: Clinical Dementia Diagnosis
+outcome: Cholinesterase Inhibitor Prescription
+observed:
+  - Regional Dementia Screening Intensity
+  - Screening Program Data Entry Backlog
+  - Screening Program Administrative Staff Overtime Hours
+  - Clinical Dementia Diagnosis
+  - Cholinesterase Inhibitor Prescription
+latent:
+  - Underlying Neurodegenerative Pathology Burden
+edges:
+  - src: Regional Dementia Screening Intensity
+    dst: Screening Program Data Entry Backlog
+    confidence: high
+    why: Higher screening intensity directly leads to more backlog.
+  - src: Regional Dementia Screening Intensity
+    dst: Screening Program Administrative Staff Overtime Hours
+    confidence: high
+    why: Story says backlog combined with screening intensity itself forces overtime.
+  - src: Screening Program Data Entry Backlog
+    dst: Screening Program Administrative Staff Overtime Hours
+    confidence: high
+    why: Backlogged forms must be processed in overtime hours.
+  - src: Regional Dementia Screening Intensity
+    dst: Clinical Dementia Diagnosis
+    confidence: high
+    why: More screening increases probability of a dementia diagnosis.
+  - src: Underlying Neurodegenerative Pathology Burden
+    dst: Clinical Dementia Diagnosis
+    confidence: high
+    why: Pathology drives cognitive decline that leads to diagnosis.
+  - src: Underlying Neurodegenerative Pathology Burden
+    dst: Cholinesterase Inhibitor Prescription
+    confidence: high
+    why: Physicians prescribe based on inferred severity of neurodegenerative damage.
+  - src: Clinical Dementia Diagnosis
+    dst: Cholinesterase Inhibitor Prescription
+    confidence: high
+    why: Prescription depends on confirmed diagnostic status.
+notes: Pathology burden is not a column, so it is treated as a latent confounder of diagnosis and prescription. Screening intensity serves as an instrument; backlog and overtime are descendants of the instrument only and should not affect diagnosis or prescription. Rejected a direct screening -> prescription edge (story routes it via diagnosis).
