@@ -53,6 +53,20 @@ def _lgbm(kind: str):
     return make
 
 
+def _lgbm_cv(kind: str):
+    """LightGBM tuned by 3-fold randomized search (12 configurations) on the training fold."""
+    def make():
+        import lightgbm as lgb
+        from sklearn.model_selection import RandomizedSearchCV
+        base = (lgb.LGBMClassifier if kind == "clf" else lgb.LGBMRegressor)(verbose=-1, random_state=0)
+        grid = {"n_estimators": [100, 200, 400], "learning_rate": [0.02, 0.05, 0.1],
+                "num_leaves": [4, 8, 16, 31], "min_child_samples": [10, 20, 50, 100],
+                "reg_lambda": [0.0, 1.0, 10.0], "subsample": [0.7, 1.0], "subsample_freq": [1]}
+        return RandomizedSearchCV(base, grid, n_iter=12, cv=3, random_state=0, n_jobs=-1,
+                                  scoring="neg_log_loss" if kind == "clf" else "neg_mean_squared_error")
+    return make
+
+
 def _linear(kind: str):
     def make():
         from sklearn.linear_model import LinearRegression, LogisticRegression
@@ -69,6 +83,7 @@ LEARNERS: dict[str, dict[str, Callable]] = {
     "tabpfn_plus_api": {"clf": _tabpfn_api("clf"), "reg": _tabpfn_api("reg")},
     "tabpfn_thinking_api": {"clf": _tabpfn_api("clf", True), "reg": _tabpfn_api("reg", True)},
     "lgbm": {"clf": _lgbm("clf"), "reg": _lgbm("reg")},
+    "lgbm_cv": {"clf": _lgbm_cv("clf"), "reg": _lgbm_cv("reg")},
     "linear": {"clf": _linear("clf"), "reg": _linear("reg")},
 }
 

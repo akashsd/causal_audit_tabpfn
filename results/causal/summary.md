@@ -5,10 +5,12 @@
 | scenario   | arm            | learner     |   n_estimates |   abstained |   mean |error| (SD) |   RMSE (SD) |   coverage | coverage 95% CI (scene-clustered)   |   CI width (SD) |   % propensities clipped |   flagged FRAGILE |   coverage when not flagged |
 |:-----------|:---------------|:------------|--------------:|------------:|--------------------:|------------:|-----------:|:------------------------------------|----------------:|-------------------------:|------------------:|----------------------------:|
 | no trap    | s_learner_all  | tabpfn_fast |           130 |           0 |               0.105 |       0.166 |    nan     | -                                   |         nan     |                  nan     |                 0 |                     nan     |
+| no trap    | oracle         | tabpfn      |           130 |           0 |               0.133 |       0.198 |      0.869 | [0.72, 0.98]                        |           0.496 |                    6.373 |                22 |                       0.954 |
 | no trap    | claude_harness | tabpfn_fast |           130 |           0 |               0.135 |       0.202 |      0.885 | [0.72, 0.98]                        |           0.508 |                    6.314 |                22 |                       0.963 |
 | no trap    | oracle         | tabpfn_fast |           130 |           0 |               0.135 |       0.202 |      0.885 | [0.72, 0.98]                        |           0.508 |                    6.314 |                22 |                       0.963 |
 | no trap    | all_features   | tabpfn_fast |           130 |           0 |               0.137 |       0.204 |      0.877 | [0.72, 0.98]                        |           0.508 |                    6.314 |                22 |                       0.954 |
 | no trap    | pretreatment   | tabpfn_fast |           130 |           0 |               0.137 |       0.204 |      0.877 | [0.72, 0.98]                        |           0.508 |                    6.314 |                22 |                       0.954 |
+| no trap    | oracle         | lgbm_cv     |           130 |           0 |               0.139 |       0.209 |      0.892 | [0.74, 0.98]                        |           0.560 |                    5.618 |                13 |                       0.966 |
 | no trap    | claude_harness | linear      |           130 |           0 |               0.307 |       0.396 |      0.869 | [0.71, 0.98]                        |           1.261 |                   16.542 |               119 |                       1.000 |
 | no trap    | oracle         | linear      |           130 |           0 |               0.307 |       0.396 |      0.869 | [0.71, 0.98]                        |           1.261 |                   16.542 |               119 |                       1.000 |
 | no trap    | all_features   | linear      |           130 |           0 |               0.307 |       0.397 |      0.869 | [0.71, 0.98]                        |           1.264 |                   16.540 |               119 |                       1.000 |
@@ -37,19 +39,24 @@
 
 | claim                                                       | method       |    n |   scenes |   runs |   testable runs |   rejected |   rejection rate | 95% CI (scene-clustered)   |
 |:------------------------------------------------------------|:-------------|-----:|---------:|-------:|----------------:|-----------:|-----------------:|:---------------------------|
-| Claude blind claim                                          | partial_corr | 2000 |       33 |     99 |              39 |         11 |             0.28 | [0.10, 0.51]               |
-| Claude blind claim                                          | partial_corr | 4000 |        3 |      7 |               3 |          2 |             0.67 | [0.67, 0.67]               |
-| Claude blind claim                                          | tabpfn_crt   | 2000 |       33 |     99 |              39 |          2 |             0.05 | [0.00, 0.13]               |
-| Claude blind claim                                          | tabpfn_crt   | 4000 |        3 |      7 |               3 |          1 |             0.33 | [0.33, 0.33]               |
-| true claim                                                  | partial_corr | 2000 |       33 |     99 |              39 |         10 |             0.26 | [0.08, 0.46]               |
-| true claim                                                  | partial_corr | 4000 |        3 |      8 |               3 |          2 |             0.67 | [0.67, 0.67]               |
-| true claim                                                  | tabpfn_crt   | 2000 |       33 |     99 |              39 |          1 |             0.03 | [0.00, 0.08]               |
-| true claim                                                  | tabpfn_crt   | 4000 |        3 |      8 |               3 |          1 |             0.33 | [0.33, 0.33]               |
-| wrong: ignores hidden confounding (detectable)              | partial_corr | 2000 |       11 |     33 |              33 |         21 |             0.64 | [0.36, 0.88]               |
-| wrong: ignores hidden confounding (detectable)              | partial_corr | 4000 |        3 |      7 |               7 |          4 |             0.57 | [0.00, 1.00]               |
-| wrong: ignores hidden confounding (detectable)              | tabpfn_crt   | 2000 |       11 |     33 |              33 |         16 |             0.48 | [0.24, 0.73]               |
-| wrong: ignores hidden confounding (detectable)              | tabpfn_crt   | 4000 |        3 |      7 |               7 |          4 |             0.57 | [0.00, 1.00]               |
-| wrong: reversed edge at treatment (detectable)              | partial_corr | 2000 |        7 |     21 |              21 |         18 |             0.86 | [0.57, 1.00]               |
-| wrong: reversed edge at treatment (detectable)              | tabpfn_crt   | 2000 |        7 |     21 |              21 |         19 |             0.90 | [0.71, 1.00]               |
-| wrong: reversed edge at treatment (equivalent — untestable) | partial_corr | 2000 |       15 |     45 |              15 |          4 |             0.27 | [0.00, 0.67]               |
-| wrong: reversed edge at treatment (equivalent — untestable) | tabpfn_crt   | 2000 |       15 |     45 |              15 |          1 |             0.07 | [0.00, 0.20]               |
+| Claude blind claim                                          | gcm_lgbm     | 2000 |       33 |    264 |             104 |         21 |             0.20 | [0.12, 0.30]               |
+| Claude blind claim                                          | partial_corr | 2000 |       33 |    264 |             104 |         35 |             0.34 | [0.15, 0.55]               |
+| Claude blind claim                                          | partial_corr | 4000 |       11 |     33 |               3 |          2 |             0.67 | [0.67, 0.67]               |
+| Claude blind claim                                          | tabpfn_crt   | 2000 |       33 |    264 |             104 |          6 |             0.06 | [0.02, 0.11]               |
+| Claude blind claim                                          | tabpfn_crt   | 4000 |       11 |     33 |               3 |          1 |             0.33 | [0.33, 0.33]               |
+| true claim                                                  | gcm_lgbm     | 2000 |       33 |    264 |             104 |         19 |             0.18 | [0.10, 0.28]               |
+| true claim                                                  | partial_corr | 2000 |       33 |    264 |             104 |         30 |             0.29 | [0.13, 0.48]               |
+| true claim                                                  | partial_corr | 4000 |       11 |     33 |               3 |          2 |             0.67 | [0.67, 0.67]               |
+| true claim                                                  | tabpfn_crt   | 2000 |       33 |    264 |             104 |          5 |             0.05 | [0.02, 0.09]               |
+| true claim                                                  | tabpfn_crt   | 4000 |       11 |     33 |               3 |          1 |             0.33 | [0.33, 0.33]               |
+| wrong: ignores hidden confounding (detectable)              | gcm_lgbm     | 2000 |       11 |     88 |              88 |         52 |             0.59 | [0.35, 0.82]               |
+| wrong: ignores hidden confounding (detectable)              | partial_corr | 2000 |       11 |     88 |              88 |         55 |             0.62 | [0.38, 0.86]               |
+| wrong: ignores hidden confounding (detectable)              | partial_corr | 4000 |       11 |     33 |              33 |         23 |             0.70 | [0.45, 0.94]               |
+| wrong: ignores hidden confounding (detectable)              | tabpfn_crt   | 2000 |       11 |     88 |              88 |         45 |             0.51 | [0.30, 0.73]               |
+| wrong: ignores hidden confounding (detectable)              | tabpfn_crt   | 4000 |       11 |     33 |              33 |         21 |             0.64 | [0.39, 0.88]               |
+| wrong: reversed edge at treatment (detectable)              | gcm_lgbm     | 2000 |        7 |     56 |              56 |         51 |             0.91 | [0.73, 1.00]               |
+| wrong: reversed edge at treatment (detectable)              | partial_corr | 2000 |        7 |     56 |              56 |         49 |             0.88 | [0.62, 1.00]               |
+| wrong: reversed edge at treatment (detectable)              | tabpfn_crt   | 2000 |        7 |     56 |              56 |         50 |             0.89 | [0.68, 1.00]               |
+| wrong: reversed edge at treatment (equivalent — untestable) | gcm_lgbm     | 2000 |       15 |    120 |              40 |         12 |             0.30 | [0.15, 0.47]               |
+| wrong: reversed edge at treatment (equivalent — untestable) | partial_corr | 2000 |       15 |    120 |              40 |         14 |             0.35 | [0.07, 0.70]               |
+| wrong: reversed edge at treatment (equivalent — untestable) | tabpfn_crt   | 2000 |       15 |    120 |              40 |          3 |             0.07 | [0.03, 0.12]               |

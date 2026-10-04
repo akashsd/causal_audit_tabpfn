@@ -1,185 +1,254 @@
-# causalaudit — TabPFN-3.5 audits causal claims
+# causalaudit: TabPFN-3.5 tests causal claims
 
-> **An agent proposes the causal story. TabPFN-3.5 tests every assumption against the data —
-> and estimates the effect only from assumptions that survive.**
+An agent writes a causal claim. TabPFN-3.5 tests the claim against the data.
+The tool estimates an effect only from a claim that the data does not contradict.
 
-Ask a model "does X cause Y?" and it will answer confidently — even when the data cannot tell.
-Hand it every column and it silently adjusts for mediators, colliders and post-treatment
-variables. LLM agents make this worse: they tell a convincing causal story, then control for the
-wrong things. `causalaudit` makes the assumptions explicit and puts TabPFN-3.5 to work twice:
+## The problem
 
-1. **Falsify.** Every causal graph implies conditional independencies. Each one is tested with a
-   **TabPFN-3.5 conditional randomization test** (TabPFN-CRT, `tabpfn-extensions`): TabPFN models
-   the target *and* simulates the tested variable from its full predictive distribution —
-   nonlinear, mixed-type, small data, no tuning.
-2. **Estimate.** A cross-fitted doubly-robust (AIPW) estimator whose propensity and outcome models
-   are TabPFN-3.5 — local open weights (3.5 / 3.5-Fast) or the Prior Labs API (Plus / Thinking).
+A predictive model does not tell you what causes what.
+If you give a model every column, it can adjust for the wrong variables.
+These variables include mediators, colliders, and variables that occur after the treatment.
+The result is an effect estimate that is wrong but looks precise.
 
-Claude (the agent) writes the assumptions as a versioned YAML causal graph **before seeing the
-data**; everything downstream is deterministic and reproducible without Claude.
+An LLM agent can write a good causal story.
+But nobody checks the assumptions in that story.
+
+## What causalaudit does
+
+1. **Claim.** Claude writes a causal graph as a YAML file before it sees the data.
+2. **Identify.** The code finds which variables to adjust for, and which variables you must not adjust for.
+3. **Test.** The code tests each conditional independence that the graph implies.
+   The test is the TabPFN-3.5 conditional randomization test (TabPFN-CRT) from `tabpfn-extensions`.
+4. **Check consequences.** If a test fails, the code checks if the failure changes the adjustment set.
+5. **Estimate.** The code estimates the effect with a cross-fitted AIPW estimator.
+   TabPFN-3.5 supplies the propensity model and the outcome models.
+6. **Report.** The report gives a verdict, the estimate, an E-value, and the results of simpler methods.
+
+Claude only writes the claim. Deterministic code makes all numbers.
+You can run the full pipeline again without Claude.
 
 ```
-claim.yaml ─► identification ─► falsification ─► overlap ─► AIPW estimate ─► verdict
- (Claude,      adjust / forbid    TabPFN-CRT       check      TabPFN-3.5        + E-value
-  blind)                                                       nuisances
+claim.yaml ─► identify ─► test (TabPFN-CRT) ─► check consequences ─► estimate (AIPW + TabPFN-3.5) ─► report
 ```
 
-## Results at a glance
+## Why TabPFN-3.5
 
-All numbers below are produced by the code in this repo from the logs in `results/`
-(`results/causal/summary.md`). CausalDS = third-party benchmark with known ground truth.
+TabPFN-3.5 gives a full predictive distribution for each row. It needs no tuning.
+These two properties do two jobs in causalaudit:
 
-| claim | evidence |
+- **Testing.** The CRT must sample a variable from its conditional distribution. TabPFN-3.5 does this directly.
+- **Estimation.** AIPW needs good propensity and outcome models on small data. TabPFN-3.5 gives them without a hyperparameter search.
+
+## Results
+
+All numbers come from the logs in `results/`. The file `results/causal/summary.md` contains the full tables.
+CausalDS is a third-party benchmark with known true effects.
+
+| Result | Evidence |
 |---|---|
-| **Handing every column to TabPFN gets causal effects wrong; the audit fixes it** | CausalDS trap scenes (mediators, colliders, post-treatment vars; 9 scenes × 10 reps): true effect inside the 95% CI **92%** of the time with causalaudit vs **26%** for AIPW on all features; RMSE 0.07 vs 0.35 SD |
-| **TabPFN-3.5 makes the estimator 2× more accurate — and the audit usable** | 13 confounded scenes, same estimator & adjustment set: RMSE **0.20** (TabPFN) vs 0.40 (LightGBM) vs 0.40 (linear) SD at n = 1000; **0.41 vs 0.94 / 0.68 at n = 300**. Calibrated propensities: only **17%** of audits flagged for poor overlap vs **92%** with LightGBM or linear |
-| **TabPFN-CRT catches wrong assumptions without crying wolf** | false alarms on true graphs **2.6%** (TabPFN-CRT) vs **26%** (linear partial correlation). At a matched false-alarm rate, wrong graphs caught: **90% vs 67%** (reversed edge at treatment), **48% vs 0%** (ignored hidden confounding) |
-| **Claude's blind claims are right — and stay testable** | correct adjustment decision in **33/33** CausalDS scenes, written from the story alone, frozen by hash before any estimate |
-| **Real data: quitting smoking → weight gain (NHEFS)** | **+3.50 kg [2.53, 4.46]** — matches the textbook 3.4–3.5 kg; "TabPFN on every column" gives +2.45 kg (30% too low). The audit also caught a wrong part of the agent's own story — and showed it doesn't affect this answer |
+| **TabPFN-CRT does not reject correct claims** | On correct causal graphs, TabPFN-CRT rejects 4.8% of claims (5 of 104 runs). A nonparametric test without TabPFN (GCM with LightGBM) rejects 18%. A linear test rejects 29%. The nominal rate is 5%. |
+| **TabPFN-CRT finds wrong claims** | TabPFN-CRT rejects 89% of claims with a reversed edge at the treatment. It rejects 51% of claims that ignore a hidden confounder at 2000 rows, and 64% at 4000 rows. GCM finds about the same number, but only if you know the true graph to set its threshold. |
+| **The audit stops a common error** | In 9 trap scenes, the audit's 95% CI contains the true effect in 92% of runs. AIPW that adjusts for all columns: 26%. |
+| **TabPFN-3.5 needs no tuning** | With the same estimator and adjustment set, TabPFN-3.5-Fast has the same or lower error than a tuned LightGBM (RMSE 0.41 vs 0.43 at 300 rows; 0.20 vs 0.21 at 1000 rows). The full TabPFN-3.5 model gives the same error as the Fast model. |
+| **The blind claims are correct** | Claude wrote 33 claims from the scene stories only. All 33 adjustment decisions are correct. |
+| **Real data (NHEFS)** | Effect of quitting smoking on weight change: **+3.50 kg [2.53, 4.46]**. The textbook value is +3.4 to +3.5 kg. The audit also found a wrong part of Claude's claim. The audit showed that this error does not change the estimate. |
+
+## Terms
+
+| Term | Meaning |
+|---|---|
+| Claim | A causal graph in YAML: the treatment, the outcome, the observed variables, the hidden (latent) variables, and the direct causal edges. |
+| Adjustment set | The variables that the estimator must control for, from the backdoor criterion. |
+| Forbidden control | A variable that makes the estimate wrong if you control for it (a mediator, a collider, or a variable after the treatment). |
+| Implied independence | "A is independent of B given S." The claim makes this statement. The data can contradict it. |
+| TabPFN-CRT | A conditional randomization test. TabPFN-3.5 models the target. TabPFN-3.5 also samples the tested variable from its conditional distribution. |
+| Holm correction | A correction for many tests on one claim. The audit rejects a claim if one corrected p-value is below 0.05. |
+| Detectable wrong claim | A wrong claim with at least one tested implication that is false. Some wrong claims are *equivalent* to the true graph: no test can find them. We report these separately. |
+| Matched false-alarm rate | Each test gets its own threshold. With this threshold, each test rejects at most 5% of correct claims. Then we compare how many wrong claims each test finds. |
+| AIPW | Augmented inverse probability weighting. A doubly-robust estimator of the average treatment effect (ATE). |
+| Propensity | The probability of treatment for a unit, given the adjustment set. |
+| FRAGILE | The verdict when more than 2% of propensities are below 0.01 or above 0.99. The estimate then depends on extrapolation. |
+| SD units | Errors divided by the standard deviation of the outcome. This makes scenes comparable. |
+| E-value | How strong (as a risk ratio) a hidden confounder must be to remove the effect. For a continuous outcome we use an approximation. |
+| Scene | One CausalDS benchmark case: a story, data, and a hidden true causal model. |
 
 ## Quick start
 
-```bash
-uv sync                      # Python 3.11–3.13; CUDA PyTorch on Windows/Linux, default wheels on macOS
-cp .env.example .env         # add TABPFN_API_KEY (https://platform.priorlabs.ai/account/api-keys)
-# one-time: accept the TabPFN-3.5 license at https://ux.priorlabs.ai (Licenses tab) for the local weights
-uv run causalaudit audit --data data/nhefs/nhefs.csv --claim claims/nhefs/claude.yaml --out results/nhefs/claude
-uv run pytest                # unit tests
-```
+1. Install the dependencies:
+   ```bash
+   uv sync
+   ```
+   This uses CUDA PyTorch on Windows and Linux. macOS uses the default wheels.
+2. Copy the example environment file:
+   ```bash
+   cp .env.example .env
+   ```
+3. Add your Prior Labs API key to `.env` as `TABPFN_API_KEY`.
+4. Accept the TabPFN-3.5 license one time at <https://ux.priorlabs.ai> (Licenses tab). The local model weights need this.
+5. Run the audit on the NHEFS example:
+   ```bash
+   uv run causalaudit audit --data data/nhefs/nhefs.csv --claim claims/nhefs/claude.yaml --out results/nhefs/claude
+   ```
+6. Read the report in `results/nhefs/claude/audit.md`.
+7. Run the unit tests:
+   ```bash
+   uv run pytest
+   ```
 
-In Claude Code, `/audit <data.csv> <codebook.md> <name>` runs the whole agent loop: a blind
-subagent writes the claim from the data dictionary, the claim is hash-frozen, the audit runs, and
-a rejected claim is revised as a *new* versioned file (never edited in place).
+To use the agent loop in Claude Code, type `/audit <data.csv> <codebook.md> <name>`.
+The command does these steps:
 
-## 1 · Real-world demo: does quitting smoking cause weight gain? (NHEFS)
+1. A new subagent reads only the data dictionary and writes the claim.
+2. The command records the SHA-256 hash of the claim.
+3. The command runs the audit.
+4. If the data rejects the claim, the agent writes a new claim file. The agent does not change the old file.
 
-A blind Claude subagent read only the [data dictionary](examples/nhefs/codebook.md) (column
-meanings + *when* each was measured) and wrote [its causal claim](claims/nhefs/claude.yaml).
-[The audit](results/nhefs/claude/audit.md):
+## Example: does quitting smoking cause weight gain? (NHEFS)
 
-- **Forbidden controls found:** `smkintensity82_71` (mediator: change in smoking 1971→82) and
-  `death` (post-treatment).
-- **Unmeasured confounding named:** the agent added a latent *incident illness* ("sick quitters"
-  quit *and* lose weight). Under its own claim the effect is therefore **not identified** — so the
-  audit reports the effect *conditional on* that confounder's absence and an E-value of **2.4**
-  (risk-ratio strength it would need with both quitting and weight change to explain the effect away).
-- **The data contradicted part of the agent's story.** The claim says the 1982 state cigarette price
-  (`price82`) relates to baseline covariates only via race and income. TabPFN-CRT rejected 3 of the
-  9 implied independencies (education, smoking intensity, alcohol use; Holm p < 0.001).
-- **The agent revised — on the record.** Shown only the audit report, a fresh subagent wrote
-  [`claude_v2.yaml`](claims/nhefs/claude_v2.yaml) (state of residence also shapes education,
-  smoking and drinking; v1 left untouched, both [hash-frozen](claims/nhefs/MANIFEST.sha256)).
-  [v2's audit](results/nhefs/claude_v2/audit.md) still finds one contradiction (exercise).
-- **Do the failures matter?** For each contradicted independency the audit tries every local repair
-  (an edge either way, or a hidden common cause) and checks whether the adjustment set stays valid.
-  Here none of them changes what must be adjusted for — verdict *PARTLY REJECTED, INCONSEQUENTIAL* —
-  and the estimate is identical under v1 and v2. We stop revising here rather than fit the claim to
-  the data.
+A Claude subagent read only the [data dictionary](examples/nhefs/codebook.md).
+The dictionary gives the meaning of each column and the time of each measurement.
+The subagent then wrote [the claim](claims/nhefs/claude.yaml).
 
-| approach | effect of quitting on weight change (kg) |
+**What the audit found:**
+
+- **Forbidden controls.** `smkintensity82_71` is a mediator. `death` occurs after the treatment.
+- **Hidden confounders.** The claim names two latent variables: *incident illness* and *state of residence*.
+  Illness can cause people to quit smoking and to lose weight.
+  Thus the effect is not identified under the claim.
+  The audit gives the estimate *if* these confounders are absent.
+- **Sensitivity.** The approximate E-value is 2.4 (2.0 for the CI bound).
+- **A contradicted claim.** The claim says that the 1982 cigarette price (`price82`) relates to other covariates only through race and income.
+  TabPFN-CRT rejected 3 of 9 implied independencies: education, smoking intensity, and alcohol use (Holm p < 0.001).
+- **A revised claim.** A new subagent read only the audit report and wrote [`claude_v2.yaml`](claims/nhefs/claude_v2.yaml).
+  The revision uses the test results, so it is not blind.
+  The audit of v2 rejected one more implication (exercise).
+- **The consequence check.** For each failed test, the code adds a local repair to the claim.
+  A repair is an edge in each direction, or a hidden common cause.
+  No repair changes the adjustment set. The verdict is *PARTLY REJECTED, INCONSEQUENTIAL*.
+  The estimate is the same for v1 and v2. We did not make more revisions.
+
+| Method | Effect of quitting on weight change (kg) |
 |---|---|
-| naive difference in means | +2.54 [1.59, 3.50] |
-| "hand every column to TabPFN" (S-learner incl. mediator & post-treatment vars) | +2.45 |
-| AIPW adjusting for every column | +3.22 [1.55, 4.89] |
-| **causalaudit** — AIPW, TabPFN-3.5-Fast (local) | **+3.50 [2.53, 4.46]** |
-| causalaudit — TabPFN-3.5 (local open weights) | +3.50 [2.54, 4.46] |
-| causalaudit — TabPFN-3.5 via API (`v3.5`) | +3.50 [2.54, 4.46] |
-| causalaudit — TabPFN-3.5 **Thinking** via API | +3.56 [2.51, 4.61] |
-| textbook (Hernán & Robins, IP weighting / standardization) | +3.4 [2.4, 4.5] / +3.5 [2.6, 4.5] |
+| Difference in means | +2.54 [1.59, 3.50] |
+| TabPFN S-learner with all columns (includes the mediator and `death`) | +2.45 |
+| AIPW with all columns | +3.22 [1.55, 4.89] |
+| **causalaudit**, TabPFN-3.5-Fast (local) | **+3.50 [2.53, 4.46]** |
+| causalaudit, TabPFN-3.5 (local) | +3.50 [2.54, 4.46] |
+| causalaudit, TabPFN-3.5 API (`v3.5`, learner `tabpfn_plus_api`) | +3.50 [2.54, 4.46] |
+| causalaudit, TabPFN-3.5 API with Thinking mode | +3.56 [2.51, 4.61] |
+| Textbook (Hernán & Robins: IP weighting / standardization) | +3.4 [2.4, 4.5] / +3.5 [2.6, 4.5] |
 
-All TabPFN-3.5 modes agree; the local open weights reproduce the hosted API to the 4th decimal
-on this all-numeric table ([`examples/nhefs/modes.py`](examples/nhefs/modes.py),
-[`results/nhefs/modes.jsonl`](results/nhefs/modes.jsonl)).
+The local model and the API agree within 0.0002 kg.
+The textbook value is a sanity check, not a ground truth. It uses the same no-hidden-confounding assumption.
+Compared to the audit, the S-learner with all columns is 30% lower.
 
-## 2 · Benchmark: CausalDS (ground truth we did not write)
+## Benchmark: CausalDS
 
-[CausalDS](https://github.com/andleb/causalds) (arXiv 2607.08093) scenes are synthetic causal
-systems with realistic variable names, a natural-language story, generated data, and known true
-effects and graphs. We use all **33 clean, binary-treatment scenes**: 22 identifiable (9 contain
-traps where adjusting for every covariate is invalid) and 11 with hidden confounding (the right
-answer is *not identifiable by adjustment*). CausalDS was released after Claude's training cutoff.
+[CausalDS](https://github.com/andleb/causalds) (arXiv 2607.08093) gives synthetic causal scenes.
+Each scene has realistic variable names, a story, data, and the true effect and graph.
+We use all 33 clean scenes with a binary treatment:
 
-**Blinding & pre-registration.** For each scene a fresh Claude subagent read only the story and
-column names ([prompt](prompts/elicit_claim.md)) and wrote a claim. All 33 claims were frozen in a
-[SHA-256 manifest](claims/causalds/MANIFEST.sha256) before any Claude-arm estimate was computed.
-Result: **33/33 correct adjustment decisions** (valid set, or correctly "not identifiable").
-Because the stories are clear, Claude's graph ≈ the true graph here — so the benchmark measures
-what the *harness* does with a claim, and E2 measures what happens when a claim is wrong.
+- 22 scenes where the effect is identifiable. 9 of these are trap scenes: adjustment for all columns is wrong.
+- 11 scenes with a hidden confounder. The correct answer is "not identifiable by adjustment".
 
-### E1 — estimation (does the effect land where it should?)
+**Blind claims.** For each scene, a new Claude subagent read only the story and the column names.
+The prompt is in [`prompts/elicit_claim.md`](prompts/elicit_claim.md).
+The [manifest](claims/causalds/MANIFEST.sha256) records the hash of each claim. Its timestamp is self-reported.
+All 33 adjustment decisions are correct.
+The stories are clear, so the claims are almost the true graphs.
+Thus E1 measures the pipeline, and E2 measures what happens when a claim is wrong.
+
+### E1: estimation
 
 ![trap scenes](results/causal/fig_traps.png)
 
-- In trap scenes, causalaudit's CI covers the true effect **92%** [87–97%, scene-clustered bootstrap]
-  of the time; AIPW on all features **26%** [4–51%]; TabPFN S-learner on all features has 5× the error.
-- A competent "adjust for everything measured before treatment" rule does as well (93%) — but it
-  needs the true time order, which Claude reconstructed from the story alone.
+- In the 9 trap scenes, the true adjustment set is empty. The difference in means is the correct method.
+  The audit finds this. Its 95% CI contains the true effect in 92% of runs [87–97%].
+- AIPW that adjusts for all columns: 26% [4–51%]. The TabPFN S-learner with all columns has 5× the error.
+- A rule "adjust for all variables before the treatment" also gets 93%. This rule needs the true time order. Claude found the time order from the story.
 
 ![learners](results/causal/fig_learners.png)
 ![small n](results/causal/fig_small_n.png)
 
-- Same estimator, same adjustment set, only the nuisance model changes: TabPFN-3.5 halves the
-  error at n = 1000 and the gap widens as data shrinks (n = 300: 0.41 vs 0.94 LightGBM / 0.68 linear).
-- TabPFN's propensities are calibrated: 6% clipped on average vs 44% (LightGBM) — so the audit's
-  overlap check flags 17% of analyses as FRAGILE vs 92% with LightGBM or linear models.
-  Among unflagged analyses, TabPFN coverage is **96%** at n = 300, 500 and 1000.
+These two figures use the 13 confounded scenes. The estimator and the adjustment set do not change. Only the model changes.
 
-### E2 — falsification (does the data catch a wrong claim?)
+- TabPFN-3.5-Fast has the same or lower error than LightGBM with a 3-fold random search. TabPFN needs no search.
+- The default LightGBM and the linear models have twice the error.
+- The full TabPFN-3.5 model has almost the same error as TabPFN-3.5-Fast. The RMSE is 0.41 vs 0.41 at 300 rows, 0.26 vs 0.27 at 500 rows, and 0.20 vs 0.20 at 1000 rows. The Fast model is sufficient for this task.
+- We do not report run times. The runs shared one GPU with other experiments, so the times are not reliable.
+- 17% of TabPFN-Fast estimates are FRAGILE at 1000 rows (30% at 300 rows). The FRAGILE estimates cover the truth in only about 50% of runs. The flag marks the estimates that you must not trust.
+- Without the FRAGILE estimates, the TabPFN coverage is 96–97% at 300, 500, and 1000 rows.
+- Note: with no traps, the TabPFN S-learner has a low error (RMSE 0.17 SD). But it gives no confidence interval, and it fails in trap scenes.
+
+### E2: falsification
 
 ![falsification](results/causal/fig_falsification.png)
 
-Wrong claims are generated from the true graph: *ignore the hidden confounder*, or *reverse an
-edge at the treatment* (mediator ↔ confounder, collider ↔ confounder). Some reversals are
-**Markov-equivalent** on the tested independencies — no test can detect them; we report those
-separately as "untestable" instead of counting them as misses.
+We make wrong claims from each true graph:
 
-- TabPFN-CRT: **2.6%** false alarms on true graphs (calibrated); linear partial correlation **26%** —
-  it reads nonlinear dependence as a violation and would reject one in four *correct* graphs.
-- At a matched false-alarm rate (≤ 5%), TabPFN-CRT catches **90%** of detectable reversed edges
-  (linear 67%) and **48%** of ignored hidden confounders (linear **0%**) at n = 2000.
+- **Ignore the hidden confounder.**
+- **Reverse an edge at the treatment.** This changes a mediator or collider into a confounder, or the opposite.
 
-## Limitations (read these)
+We test each claim in 8 independent samples of 2000 rows.
 
-- Hidden confounding is only testable through what it implies (e.g. instrument–outcome dependence);
-  power at n = 2000 is moderate (48%) and scene-dependent. Untestable assumptions are reported as
-  such and covered by the E-value, not "verified".
-- Binary treatments only (AIPW). CausalDS's truth is itself a Monte-Carlo estimate.
-- The CRT p-value uses a normal approximation to the B = 100 permutation null (the rank p-value is
-  floored at 1/101, which would make multi-test claims unrejectable after Holm); calibration is
-  checked empirically by the false-alarm rate above. Claims test at most their first 8 implied
-  independencies.
-- Replicates are disjoint subsamples of each scene's 16k rows; CIs are clustered by scene.
-- `tabpfn-extensions` 0.6.3 needed a small dtype fix for TabPFN-3.5 regressors (patched at runtime
-  in `falsify.py`).
+- On correct claims, TabPFN-CRT rejects 4.8% [2–9%]. GCM with LightGBM rejects 18% [10–28%]. The linear test rejects 29% [13–48%]. The nominal rate is 5%.
+- On equivalent wrong claims (no test can find them), TabPFN-CRT rejects 7.5%. This is close to its false-alarm rate, as it must be. GCM rejects 30% and the linear test 35%.
+- At the nominal 5% level, TabPFN-CRT finds 89% of the reversed edges and 51% of the ignored hidden confounders. GCM finds 91% and 59%, and the linear test 88% and 62%. But these two tests also reject many correct claims.
+- Panel B gives each test a threshold with the same false-alarm rate (4.8%). TabPFN-CRT and GCM then find about the same number of wrong claims (hidden confounder: 52% and 51%; reversed edge: 89% and 86%). The linear test finds only 7% of the hidden-confounder claims.
+- A matched threshold needs the true graph. A real audit does not have it. Thus the important property is a correct false-alarm rate at the nominal level. Only TabPFN-CRT has this property here.
+- The power grows with the data. At 4000 rows, TabPFN-CRT finds 64% of the hidden-confounder claims (11 scenes, 3 samples each).
 
-## Reproduce everything
+## Limits
+
+- A hidden confounder is testable only through its implications, for example an instrument that becomes dependent on the outcome. The power at 2000 rows is moderate and changes from scene to scene.
+- The audit does not verify an assumption that no test can reach. The E-value describes that risk.
+- The estimator supports binary treatments only.
+- The CausalDS true effects are Monte Carlo estimates.
+- The CRT p-value uses a normal approximation to a null distribution with B = 100 samples. The plain rank p-value has a minimum of 1/101. After the Holm correction, the audit could then never reject a claim with 6 or more tests. The false-alarm rates above check the approximation.
+- In the benchmark, each claim tests its first 8 implications. The CLI default is 12.
+- The benchmarks use TabPFN-3.5-Fast unless a table says otherwise.
+- The replicates are disjoint samples from 16,000 rows per scene. We cluster the confidence intervals by scene.
+- `tabpfn-extensions` 0.6.3 needs a small dtype fix for the TabPFN-3.5 regressor. `falsify.py` applies the fix at run time.
+
+## Reproduce the results
+
+Run these commands. The times are for one RTX 3070.
 
 ```bash
-uv run causalaudit bench e1 --n 1000 --reps 10                                  # E1 (~2 h on an RTX 3070)
-uv run causalaudit bench e1 --n 300 --reps 20 --arms oracle --no-trap-only --out e1_small_n.jsonl
-uv run causalaudit bench e2 --n 2000 --reps 3                                   # E2 (~3 h)
-uv run python -m causalaudit.analyze                                            # results/causal/summary.md
-uv run --group figures python -m causalaudit.figures                            # README figures
-```
-CausalDS files are downloaded on demand from Hugging Face; Claude's claims are already in
-`claims/` (re-running the elicitation needs Claude Code; see `prompts/`).
-
-## Layout
-
-```
-src/causalaudit/  claim.py (graph logic) · falsify.py (TabPFN-CRT) · estimate.py (AIPW)
-                  audit.py (pipeline + report) · causalds.py / bench.py / analyze.py / figures.py
-claims/           blind Claude claims + hash manifest      prompts/   exact elicitation prompts
-examples/nhefs/   data dictionary + modes script            data/nhefs/  NHEFS analysis file
-results/          benchmark logs, figures, audit reports    tests/     unit tests
-.claude/commands/ the /audit agent command                  CLAUDE.md  agent rules
+uv run causalaudit bench e1 --n 1000 --reps 10                                        # E1, about 2 h
+uv run causalaudit bench e1 --n 1000 --reps 10 --arms oracle --no-trap-only --learners lgbm_cv tabpfn
+uv run causalaudit bench e1 --n 300 --reps 20 --arms oracle --no-trap-only --learners tabpfn_fast lgbm lgbm_cv linear tabpfn --out e1_small_n.jsonl
+uv run causalaudit bench e1 --n 500 --reps 20 --arms oracle --no-trap-only --learners tabpfn_fast lgbm lgbm_cv linear tabpfn --out e1_small_n.jsonl
+uv run causalaudit bench e2 --n 2000 --reps 8 --methods tabpfn_crt gcm_lgbm partial_corr   # E2, about 6 h
+uv run python -m causalaudit.analyze                                                  # writes results/causal/summary.md
+uv run --group figures python -m causalaudit.figures                                  # writes the figures
+uv run python examples/nhefs/modes.py --learners tabpfn_fast tabpfn tabpfn_plus_api tabpfn_thinking_api
 ```
 
-## Credits & license
+The code downloads the CausalDS files from Hugging Face when it needs them.
+The API learners use Prior Labs credits. The code caches each API prediction in `results/cache/`.
+The command `uv run causalaudit nhefs-data` downloads the NHEFS file again from its public URL.
 
-Apache-2.0. Built on [TabPFN](https://github.com/PriorLabs/TabPFN) and
-[tabpfn-extensions](https://github.com/PriorLabs/tabpfn-extensions) (TabPFN-CRT) by Prior Labs.
-Benchmark: [CausalDS](https://github.com/andleb/causalds) (data CC0). NHEFS: Hernán & Robins,
-*Causal Inference: What If* (public data via [Rdatasets](https://vincentarelbundock.github.io/Rdatasets/)).
-Related work we build on or differ from: Causal-Copilot, CausalGuard, PyWhy-LLM (LLM causal agents),
-Do-PFN / CausalPFN (causal foundation models), DoubleML's TabPFN example.
+## Repository layout
+
+```
+src/causalaudit/   claim.py (graph logic), falsify.py (TabPFN-CRT, GCM, linear test), estimate.py (AIPW)
+                   audit.py (pipeline and report), causalds.py, bench.py, analyze.py, figures.py
+claims/            the blind claims and the hash manifests
+prompts/           the exact prompts for the subagents
+examples/nhefs/    the data dictionary and the modes script
+data/nhefs/        the NHEFS analysis file
+results/           the benchmark logs, the figures, and the audit reports
+tests/             the unit tests
+.claude/commands/  the /audit agent command
+CLAUDE.md          the rules for the agent
+```
+
+## Credits and license
+
+License: Apache-2.0.
+
+- [TabPFN](https://github.com/PriorLabs/TabPFN) and [tabpfn-extensions](https://github.com/PriorLabs/tabpfn-extensions) (TabPFN-CRT) by Prior Labs.
+- Benchmark: [CausalDS](https://github.com/andleb/causalds). The data license is CC0.
+- NHEFS: Hernán and Robins, *Causal Inference: What If*. Public data from [Rdatasets](https://vincentarelbundock.github.io/Rdatasets/).
+- Related work: Causal-Copilot, CausalGuard, and PyWhy-LLM (LLM causal agents); Do-PFN and CausalPFN (causal foundation models); the TabPFN example in DoubleML; GCM (Shah and Peters, 2020).

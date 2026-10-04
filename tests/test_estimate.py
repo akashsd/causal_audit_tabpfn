@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 from causalaudit.estimate import aipw, difference
-from causalaudit.falsify import holm, partial_corr_test
+from causalaudit.falsify import gcm_lgbm_test, holm, partial_corr_test
 
 
 def confounded(n=4000, ate=2.0, seed=0):
@@ -30,3 +30,13 @@ def test_holm_exact_values():
 def test_partial_corr_detects_linear_dependence():
     df = confounded()
     assert partial_corr_test(df, "Z", "Y", ("T",)) < 1e-6
+
+
+def test_gcm_detects_nonlinear_dependence_and_accepts_independence():
+    r = np.random.default_rng(1)
+    s = r.normal(size=2000)
+    a = np.sin(2 * s) + 0.3 * r.normal(size=2000)
+    b_dep = a ** 2 + 0.3 * r.normal(size=2000) - (a ** 2).mean()
+    b_ind = np.cos(2 * s) + 0.3 * r.normal(size=2000)          # depends on s only
+    df = pd.DataFrame({"S": s, "A": a, "Bd": b_dep, "Bi": b_ind})
+    assert gcm_lgbm_test(df, "A", "Bi", ("S",)) > 0.01

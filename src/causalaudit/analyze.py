@@ -57,6 +57,7 @@ def e1_table() -> pd.DataFrame:
     d = _read("e1_estimation.jsonl")
     if d.empty:
         return d
+    d = d.drop_duplicates(["scene", "rep", "arm", "learner", "n"], keep="last").reset_index(drop=True)
     sd = {s: C.ground_truth(s)["outcome_stats"]["std"] for s in d.scene.unique()}
     traps = trap_scenes()
     d["sd"] = d.scene.map(sd)

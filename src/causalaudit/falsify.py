@@ -97,6 +97,30 @@ def partial_corr_test(df: pd.DataFrame, a: str, b: str, given: tuple[str, ...]) 
     return float(stats.pearsonr(resid(a), resid(b)).pvalue)
 
 
+def gcm_lgbm_test(df: pd.DataFrame, a: str, b: str, given: tuple[str, ...], seed: int = 0) -> float:
+    """Nonparametric baseline without TabPFN: the Generalised Covariance Measure (Shah & Peters, 2020)
+    with cross-fitted LightGBM regressions of a and b on `given`; two-sided normal p-value."""
+    import lightgbm as lgb
+    from sklearn.model_selection import KFold
+
+    df = df[[a, b, *given]].dropna()
+    va, vb = (pd.to_numeric(df[v], errors="coerce").to_numpy(float) for v in (a, b))
+    ra, rb = va - va.mean(), vb - vb.mean()
+    if given:
+        Z = df[list(given)].to_numpy(float)
+        ra, rb = np.empty(len(df)), np.empty(len(df))
+        for tr, te in KFold(2, shuffle=True, random_state=seed).split(Z):
+            for v, r in ((va, ra), (vb, rb)):
+                m = lgb.LGBMRegressor(n_estimators=200, learning_rate=0.05, num_leaves=15, min_child_samples=20,
+                                      verbose=-1, random_state=seed).fit(Z[tr], v[tr])
+                r[te] = v[te] - m.predict(Z[te])
+    R = ra * rb
+    sd = R.std(ddof=1)
+    if not np.isfinite(sd) or sd == 0:
+        return 1.0
+    return float(2 * stats.norm.sf(abs(np.sqrt(len(R)) * R.mean() / sd)))
+
+
 def holm(ps: list[float]) -> list[float]:
     ps = [1.0 if not np.isfinite(p) else p for p in ps]  # an untestable (NaN) test never rejects
     m, order = len(ps), np.argsort(ps)
@@ -125,6 +149,8 @@ def falsify(claim: Claim, df: pd.DataFrame, method: str = "tabpfn_crt", alpha: f
             p = crt_test(df, a, b, given, fast=False, seed=seed)
         elif method == "partial_corr":
             p = partial_corr_test(df, a, b, given)
+        elif method == "gcm_lgbm":
+            p = gcm_lgbm_test(df, a, b, given, seed=seed)
         else:
             raise ValueError(method)
         tests.append(CITest(a, b, given, p, method, round(time.perf_counter() - t0, 2)))

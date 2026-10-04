@@ -18,7 +18,8 @@ from .bench import OUT
 
 SURFACE, INK, INK2, GRID = "#fcfcfb", "#0b0b0b", "#52514e", "#e4e3df"
 BLUE, ORANGE, AQUA, GRAY = "#2a78d6", "#eb6834", "#1baf7a", "#a9a8a2"
-LEARNER = {"tabpfn_fast": ("TabPFN-3.5", BLUE), "lgbm": ("LightGBM", ORANGE), "linear": ("Linear", AQUA)}
+LEARNER = {"tabpfn_fast": ("TabPFN-3.5-Fast", BLUE), "lgbm_cv": ("LightGBM (tuned)", ORANGE),
+           "linear": ("Linear", AQUA)}
 
 plt.rcParams.update({"figure.facecolor": SURFACE, "axes.facecolor": SURFACE, "savefig.facecolor": SURFACE,
                      "axes.edgecolor": GRID, "axes.labelcolor": INK2, "xtick.color": INK2, "ytick.color": INK2,
@@ -32,7 +33,8 @@ def _read(name):
 
 
 def _e1():
-    d = _read("e1_estimation.jsonl")
+    d = _read("e1_estimation.jsonl").drop_duplicates(["scene", "rep", "arm", "learner", "n"], keep="last")
+    d = d.reset_index(drop=True)
     sd = {s: C.ground_truth(s)["outcome_stats"]["std"] for s in d.scene.unique()}
     d["err_sd"] = (d.ate - d.truth) / d.scene.map(sd)
     d["trap"] = d.scene.isin(trap_scenes())
@@ -66,12 +68,12 @@ def fig_traps():
     fig, (a1, a2) = plt.subplots(1, 2, figsize=(10, 3.4), gridspec_kw={"wspace": 0.75})
     cov = [(lab, col, t[(t.arm == a) & (t.learner == l)].covered.dropna()) for a, l, lab, col in arms[:3]]
     vals = [c.mean() for _, _, c in cov]
-    ci = [wilson(int(c.sum()), len(c)) for _, _, c in cov]
+    ci = [cluster_bootstrap(c.astype(float), t.loc[c.index, "scene"]) for _, _, c in cov]
     _hbars(a1, [x[0] for x in cov], vals, [x[1] for x in cov], np.array([c[0] for c in ci]), np.array([c[1] for c in ci]))
     a1.axvline(0.95, color=INK2, lw=1, ls="--")
     a1.set_ylim(-0.75, None)
     a1.text(0.94, -0.62, "nominal 95%", color=INK2, fontsize=8, ha="right")
-    a1.set_xlabel("95% CI contains the true effect")
+    a1.set_xlabel("95% CI contains the true effect (scene-clustered 95% CI)")
     rm = [(lab, col, np.sqrt((t[(t.arm == a) & (t.learner == l)].err_sd ** 2).mean())) for a, l, lab, col in arms]
     _hbars(a2, [x[0] for x in rm], [x[2] for x in rm], [x[1] for x in rm], fmt="{:.2f}", xmax=max(x[2] for x in rm))
     a2.set_xlabel("RMSE of the effect (outcome SDs)")
@@ -83,7 +85,7 @@ def fig_traps():
 
 def fig_learners():
     d = _e1()
-    t = d[~d.trap & (d.arm == "claude_harness")]
+    t = d[~d.trap & (d.arm == "oracle")]
     fig, (a1, a2) = plt.subplots(1, 2, figsize=(10, 2.8), gridspec_kw={"wspace": 0.45})
     ls = list(LEARNER)
     rm = [np.sqrt((t[t.learner == l].err_sd ** 2).mean()) for l in ls]
@@ -143,10 +145,12 @@ def fig_falsification(n: int = 2000):
     kinds = [("true claim", "true claims\n(false alarms ↓)"),
              ("wrong: ignores hidden confounding (detectable)", "wrong: ignores hidden\nconfounding (caught ↑)"),
              ("wrong: reversed edge at treatment (detectable)", "wrong: reversed edge\nat treatment (caught ↑)")]
-    methods = [("tabpfn_crt", "TabPFN-3.5 CRT", BLUE), ("partial_corr", "linear partial correlation", ORANGE)]
+    methods = [("tabpfn_crt", "TabPFN-3.5-Fast CRT", BLUE), ("gcm_lgbm", "GCM with LightGBM (nonparametric)", ORANGE),
+               ("partial_corr", "linear partial correlation", AQUA)]
+    methods = [m for m in methods if (d.method == m[0]).any()]
     fig, (ax, ax2) = plt.subplots(1, 2, figsize=(12.5, 3.8), gridspec_kw={"width_ratios": [3, 2], "wspace": 0.25})
     x = np.arange(len(kinds))
-    w = 0.36
+    w = 0.8 / len(methods)
     for i, (m, lab, col) in enumerate(methods):
         vals, los, his = [], [], []
         for k, _ in kinds:
@@ -154,13 +158,13 @@ def fig_falsification(n: int = 2000):
             vals.append(s_.rejected.mean() if len(s_) else np.nan)
             lo, hi = cluster_bootstrap(s_.rejected.astype(float), s_.scene) if len(s_) else (np.nan, np.nan)
             los.append(lo); his.append(hi)
-        xs = x + (i - 0.5) * w
+        xs = x + (i - (len(methods) - 1) / 2) * w
         ax.bar(xs, vals, width=w, color=col, edgecolor=SURFACE, linewidth=2, label=lab)
         ax.errorbar(xs, vals, yerr=[np.array(vals) - los, np.array(his) - vals], fmt="none",
                     ecolor=INK2, elinewidth=1.2, capsize=3)
         for xi, v, h in zip(xs, vals, his):
             if np.isfinite(v):
-                ax.text(xi + w * 0.08, min(max(v, h) + 0.04, 1.08), f"{v:.0%}", ha="center", fontsize=9, color=INK)
+                ax.text(xi, min(max(v, h) + 0.04, 1.08), f"{v:.0%}", ha="center", fontsize=8, color=INK)
     ax.axhline(0.05, color=INK2, lw=1, ls="--")
     ax.set_xticks(x, [k[1] for k in kinds])
     ax.set_ylim(0, 1.18)
@@ -177,10 +181,10 @@ def fig_falsification(n: int = 2000):
     x2 = np.arange(len(kinds2))
     for i, (m, lab, col) in enumerate(methods):
         vals = [mp[(mp.method == m) & (mp.claim == k)]["detection at matched false-alarm rate"].mean() for k, _ in kinds2]
-        xs = x2 + (i - 0.5) * w
+        xs = x2 + (i - (len(methods) - 1) / 2) * w
         ax2.bar(xs, vals, width=w, color=col, edgecolor=SURFACE, linewidth=2)
         for xi, v in zip(xs, vals):
-            ax2.text(xi, v + 0.04, f"{v:.0%}", ha="center", fontsize=9, color=INK)
+            ax2.text(xi, v + 0.04, f"{v:.0%}", ha="center", fontsize=8, color=INK)
     ax2.set_xticks(x2, [k[1].replace(" (caught ↑)", "") for k in kinds2])
     ax2.set_ylim(0, 1.18)
     ax2.yaxis.set_major_formatter(PercentFormatter(1.0, decimals=0))
